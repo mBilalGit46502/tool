@@ -6,11 +6,12 @@
   const toolbox = document.createElement("div");
   toolbox.id = "toolbox-download";
   toolbox.style.cssText = `
-    position: fixed; bottom: 20px; right: 20px;
-    background: #fff; padding: 12px; border-radius: 10px;
-    box-shadow: 0 0 10px rgba(0,0,0,0.15); z-index: 9999;
-    font-family: sans-serif;
-  `;
+  position: fixed; top: 50%; right: 0;
+  transform: translateY(-50%);
+  background: #fff; padding: 12px; border-radius: 10px 0 0 10px;
+  box-shadow: 0 0 10px rgba(0,0,0,0.15); z-index: 9999;
+  font-family: sans-serif;
+`;
 
   toolbox.innerHTML = `
     <button id="downloadBtn">Download</button>
