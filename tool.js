@@ -1,152 +1,168 @@
 (function () {
-  // ========== [SMART TOOLBOX CONTAINER START] ==========
   const toolbox = document.createElement("div");
-  toolbox.id = "toolbox-container"; // Main toolbox container
+  toolbox.id = "toolbox-container";
+  document.body.appendChild(toolbox);
+
+  // Styling
   toolbox.style.cssText = `
     position: fixed;
-    top: 50%;
-    right: 0;
-    transform: translateY(-50%);
-    background: rgba(255, 255, 255, 0.95);
+    top: 100px;
+    left: 20px;
+    background: rgba(255, 255, 255, 0.8);
     backdrop-filter: blur(10px);
-    padding: 20px;
-    border-radius: 15px 0 0 15px;
-    box-shadow: -6px 6px 24px rgba(0,0,0,0.2);
-    font-family: 'Segoe UI', sans-serif;
-    color: #333;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+    width: 220px;
     z-index: 9999;
-    width: 280px;
-    display: block;
+    font-family: 'Segoe UI', sans-serif;
+    user-select: none;
   `;
-  document.body.appendChild(toolbox); // Append the toolbox to the body
 
-  // ========== [TOOL CHILDREN (Download Button)] ==========
-  const toolboxTitle = document.createElement("div");
-  toolboxTitle.innerHTML = `
-    <strong style="font-size: 18px; font-weight: bold;">Smart Toolbox</strong>
+  // Header
+  const header = document.createElement("div");
+  header.innerHTML = `<strong style="padding-left:10px;">Smart Toolbox</strong>`;
+  header.style.cssText = `
+    background: #4f46e5;
+    color: white;
+    padding: 10px;
+    font-size: 15px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: move;
+    border-radius: 10px 10px 0 0;
   `;
-  toolbox.appendChild(toolboxTitle); // Append to toolbox
 
-  // Create Download Button with hover and gradient effect
-  const downloadBtn = document.createElement("button");
-  downloadBtn.textContent = "Download Options";
-  downloadBtn.style.cssText = `
-    background: linear-gradient(90deg, #6A11CB 0%, #2575FC 100%);
-    color: #fff;
+  const toggleBtn = document.createElement("button");
+  toggleBtn.textContent = "–";
+  toggleBtn.style.cssText = `
+    background: transparent;
     border: none;
-    padding: 15px;
-    width: 100%;
-    margin-top: 16px;
+    color: white;
+    font-size: 18px;
+    margin-right: 8px;
     cursor: pointer;
-    border-radius: 8px;
-    font-size: 16px;
-    transition: background 0.3s ease;
   `;
-  downloadBtn.onmouseover = () => {
-    downloadBtn.style.background = "linear-gradient(90deg, #2575FC 0%, #6A11CB 100%)";
-  };
-  downloadBtn.onmouseout = () => {
-    downloadBtn.style.background = "linear-gradient(90deg, #6A11CB 0%, #2575FC 100%)";
-  };
-  toolbox.appendChild(downloadBtn); // Append to toolbox
+  header.appendChild(toggleBtn);
+  toolbox.appendChild(header);
 
-  // Create a format selection dropdown with elegant styling
-  const downloadSelectContainer = document.createElement("div");
-  downloadSelectContainer.style.cssText = `
-    margin-top: 12px;
-    display: none; /* Initially hidden */
-  `;
-  const downloadFormatLabel = document.createElement("label");
-  downloadFormatLabel.textContent = "Select Format:";
-  downloadFormatLabel.style.cssText = `
-    font-size: 14px;
-    color: #444;
-  `;
-  const downloadSelect = document.createElement("select");
-  downloadSelect.style.cssText = `
+  const toolsArea = document.createElement("div");
+  toolsArea.style.cssText = `padding: 12px; transition: 0.3s ease;`;
+  toolbox.appendChild(toolsArea);
+
+  const downloadBtn = document.createElement("button");
+  downloadBtn.textContent = "Download";
+  downloadBtn.style.cssText = `
     width: 100%;
     padding: 10px;
-    border-radius: 8px;
-    font-size: 14px;
-    border: 1px solid #ddd;
-    margin-top: 8px;
-    transition: border 0.2s ease;
+    margin-bottom: 10px;
+    font-weight: bold;
+    background: linear-gradient(135deg, #6366f1, #3b82f6);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
   `;
-  downloadSelect.onfocus = () => {
-    downloadSelect.style.border = "1px solid #2575FC";
-  };
-  downloadSelect.onblur = () => {
-    downloadSelect.style.border = "1px solid #ddd";
-  };
-  downloadSelect.innerHTML = `
-    <option value="pdf">PDF</option>
-    <option value="html">HTML</option>
-    <option value="json">JSON</option>
-    <option value="txt">TXT</option>
-  `;
-  downloadSelectContainer.appendChild(downloadFormatLabel);
-  downloadSelectContainer.appendChild(downloadSelect);
-  toolbox.appendChild(downloadSelectContainer); // Append to toolbox
+  toolsArea.appendChild(downloadBtn);
 
-  // ========== [DOWNLOAD FUNCTIONALITY START] ==========
-  downloadBtn.onclick = () => {
-    // Show the format selection options when the user clicks the button
-    downloadSelectContainer.style.display = downloadSelectContainer.style.display === "none" ? "block" : "none";
-  };
+  const formatSection = document.createElement("div");
+  formatSection.style.display = "none";
+  formatSection.innerHTML = `
+    <label style="display:block; margin: 6px 0;">Choose format:</label>
+    <select id="downloadFormat" style="width: 100%; padding: 6px; border-radius: 6px;">
+      <option value="pdf">PDF</option>
+      <option value="html">HTML</option>
+      <option value="json">JSON</option>
+      <option value="txt">TXT</option>
+    </select>
+    <div style="margin-top: 10px; display: flex; gap: 10px;">
+      <button id="confirmBtn" style="flex:1; padding:6px; background:#10b981; color:white; border:none; border-radius:6px;">Confirm</button>
+      <button id="cancelBtn" style="flex:1; padding:6px; background:#ef4444; color:white; border:none; border-radius:6px;">Close</button>
+    </div>
+  `;
+  toolsArea.appendChild(formatSection);
 
   downloadBtn.addEventListener("click", () => {
-    // Reset the download select container if already visible
-    downloadSelectContainer.style.display = "block";
+    formatSection.style.display = formatSection.style.display === "none" ? "block" : "none";
   });
 
-  // Handle the download functionality based on selected format
-  downloadSelect.addEventListener("change", () => {
-    const format = downloadSelect.value;
-    const contentClone = document.body.cloneNode(true);
-    const toolboxClone = contentClone.querySelector("#toolbox-container");
-    if (toolboxClone) toolboxClone.remove(); // Remove the toolbox from the content before downloading
-
-    const filename = document.title.replace(/\s+/g, '_') + '_' + new Date().toISOString().slice(0, 16).replace(/[:T]/g, '-');
-
-    if (format === "pdf") {
-      window.print(); // Simulated PDF download (you can improve with actual PDF libraries if needed)
-    } else if (format === "html") {
-      const blob = new Blob([ "<!DOCTYPE html>" + contentClone.innerHTML ], { type: "text/html" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = filename + ".html";
-      a.click();
-      URL.revokeObjectURL(url);
-    } else if (format === "json") {
-      const pageData = {
-        title: document.title,
-        url: window.location.href,
-        timestamp: new Date().toISOString(),
-        sample: contentClone.innerText.slice(0, 300),
-      };
-      const blob = new Blob([ JSON.stringify(pageData, null, 2) ], { type: "application/json" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = filename + ".json";
-      a.click();
-      URL.revokeObjectURL(url);
-    } else if (format === "txt") {
-      const blob = new Blob([ contentClone.innerText ], { type: "text/plain" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = filename + ".txt";
-      a.click();
-      URL.revokeObjectURL(url);
-    } else {
-      alert("Invalid format! Please select pdf, html, json, or txt.");
-    }
-
-    // Hide the options after download
-    downloadSelectContainer.style.display = "none";
+  toggleBtn.addEventListener("click", () => {
+    const isHidden = toolsArea.style.display === "none";
+    toolsArea.style.display = isHidden ? "block" : "none";
+    formatSection.style.display = "none";
+    toggleBtn.textContent = isHidden ? "–" : "+";
   });
 
-  // ========== [DOWNLOAD FUNCTIONALITY END] ==========
+  formatSection.querySelector("#confirmBtn").addEventListener("click", () => {
+    const format = formatSection.querySelector("#downloadFormat").value;
+    toolbox.style.display = "none";
+
+    setTimeout(() => {
+      const filename = document.title.replace(/\s+/g, "_") + "_" + new Date().toISOString().slice(0, 16).replace(/[:T]/g, "-");
+      const contentClone = document.body.cloneNode(true);
+      const toolboxClone = contentClone.querySelector("#toolbox-container");
+      if (toolboxClone) toolboxClone.remove();
+
+      if (format === "pdf") {
+        window.print();
+      } else {
+        let blob, extension;
+        if (format === "html") {
+          blob = new Blob(["<!DOCTYPE html>" + contentClone.innerHTML], { type: "text/html" });
+          extension = "html";
+        } else if (format === "json") {
+          const pageData = {
+            title: document.title,
+            url: window.location.href,
+            timestamp: new Date().toISOString(),
+            sample: contentClone.innerText.slice(0, 300),
+          };
+          blob = new Blob([JSON.stringify(pageData, null, 2)], { type: "application/json" });
+          extension = "json";
+        } else {
+          blob = new Blob([contentClone.innerText], { type: "text/plain" });
+          extension = "txt";
+        }
+
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = filename + "." + extension;
+        a.click();
+        URL.revokeObjectURL(url);
+      }
+
+      toolbox.style.display = "block";
+      formatSection.style.display = "none";
+    }, 300);
+  });
+
+  formatSection.querySelector("#cancelBtn").addEventListener("click", () => {
+    formatSection.style.display = "none";
+  });
+
+  // Dragging support
+  let offsetX = 0, offsetY = 0, isDragging = false;
+
+  toolbox.addEventListener("mousedown", (e) => {
+  isDragging = true;
+  offsetX = e.clientX - toolbox.offsetLeft;
+  offsetY = e.clientY - toolbox.offsetTop;
+});
+
+  document.addEventListener("mousemove", (e) => {
+  if (!isDragging) return;
+  let x = e.clientX - offsetX;
+  let y = e.clientY - offsetY;
+
+  // Remove limits — allow full screen drag (even off-screen if you want)
+  toolbox.style.left = `${x}px`;
+  toolbox.style.top = `${y}px`;
+});
+
+  document.addEventListener("mouseup", () => {
+    isDragging = false;
+    document.body.style.userSelect = "";
+  });
 })();
