@@ -425,6 +425,7 @@ document.addEventListener("mouseup", () => {
 */
 
 
+
 (function () {
   const html2canvasScript = document.createElement("script");
   html2canvasScript.src = "https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js";
@@ -488,7 +489,7 @@ document.addEventListener("mouseup", () => {
 
       if (type === "full") {
         if (!includeToolbox) toolbox.style.display = "none";
-        html2canvas(document.body, { scale: 2, useCORS: true }).then(canvas => {
+        html2canvas(document.body, { scale: 10, useCORS: true }).then(canvas => {
           if (!includeToolbox) toolbox.style.display = "block";
           showPreview(canvas);
         });
@@ -538,7 +539,7 @@ document.addEventListener("mouseup", () => {
           y: rect.top,
           width: rect.width,
           height: rect.height,
-          scale: 2,
+          scale: 10,  // High resolution
           useCORS: true,
           scrollY: -window.scrollY
         }).then(canvas => {
@@ -604,19 +605,19 @@ document.addEventListener("mouseup", () => {
       };
 
       const copyBtn = document.createElement("button");
-      copyBtn.textContent = "Copy to Clipboard";
-      copyBtn.style.cssText = "padding: 8px 16px; background: #3b82f6; color: white; border: none; border-radius: 6px; margin-right: 10px;";
-      copyBtn.onclick = async () => {
-        const blob = await (await fetch(dataURL)).blob();
-        try {
-          await navigator.clipboard.write([new ClipboardItem({ [blob.type]: blob })]);
-          copyBtn.textContent = "Copied!";
-          setTimeout(() => (copyBtn.textContent = "Copy to Clipboard"), 1500);
-        } catch (err) {
-          alert("Clipboard copy failed: " + err);
-        }
-      };
-
+copyBtn.textContent = "Copy to Clipboard";
+copyBtn.style.cssText = "padding: 8px 16px; background: #3b82f6; color: white; border: none; border-radius: 6px; margin-right: 10px;";
+copyBtn.onclick = async () => {
+  const blob = await (await fetch(dataURL)).blob();
+  try {
+    // Write to clipboard with high resolution image
+    await navigator.clipboard.write([new ClipboardItem({ [blob.type]: blob })]);
+    copyBtn.textContent = "Copied!";
+    setTimeout(() => (copyBtn.textContent = "Copy to Clipboard"), 1500);
+  } catch (err) {
+    alert("Clipboard copy failed: " + err);
+  }
+};
       const cancelBtn = document.createElement("button");
       cancelBtn.textContent = "Cancel";
       cancelBtn.style.cssText = "padding: 8px 16px; background: #ef4444; color: white; border: none; border-radius: 6px;";
