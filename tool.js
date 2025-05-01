@@ -319,13 +319,17 @@ document.addEventListener("mouseup", () => {
           if (!includeToolbox) toolbox.style.display = "none";
 
           html2canvas(document.body, {
-            x: rect.left, y: rect.top, width: rect.width, height: rect.height,
-            scale: 3, useCORS: true
-          }).then(canvas => {
-            if (!includeToolbox) toolbox.style.display = "block";
-            showPreview(canvas);
-          });
-
+  x: rect.left,
+  y: rect.top,
+  width: rect.width,
+  height: rect.height,
+  scale: 10, // Very high scale for 12K look
+  useCORS: true,
+  scrollY: -window.scrollY
+}).then(canvas => {
+  if (!includeToolbox) toolbox.style.display = "block";
+  showPreview(canvas);
+});
           document.removeEventListener("mousemove", move);
           document.removeEventListener("mouseup", end);
           document.removeEventListener("touchmove", move);
