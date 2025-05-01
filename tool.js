@@ -598,60 +598,30 @@ document.addEventListener("mouseup", () => {
       downloadBtn.style.cssText = "padding: 8px 16px; background: #22c55e; color: white; border: none; border-radius: 6px; margin-right: 10px;";
       downloadBtn.onclick = () => {
         const a = document.createElement("a");
-        
         a.href = dataURL;
-       const websiteName = location.hostname.replace(/\W+/g, "-");
-const pageName = document.title.trim().replace(/\W+/g, "-");
-a.download = `${websiteName}-${pageName}.${format}`;
+        const websiteName = location.hostname.replace(/\W+/g, "-");
+        const pageName = document.title.trim().replace(/\W+/g, "-");
+        a.download = `${websiteName}-${pageName}.${format}`;
         a.click();
-      };
-
-      const cancelBtn = document.createElement("button");
-      cancelBtn.textContent = "Cancel";
-      cancelBtn.style.cssText = "padding: 8px 16px; background: #ef4444; color: white; border: none; border-radius: 6px;";
-      cancelBtn.onclick = () => {
-        previewBox.remove();
-        screenshotBtn.disabled = false;
-        captureShotBtn.disabled = false;
       };
 
       const clipboardBtn = document.createElement("button");
       clipboardBtn.textContent = `Copy to Clipboard (${format.toUpperCase()} + URL)`;
       clipboardBtn.style.cssText = "padding: 8px 16px; background: #0ea5e9; color: white; border: none; border-radius: 6px; margin-left: 10px;";
       clipboardBtn.onclick = () => {
-  copyImageToClipboard(canvas, format);
-};
+        copyImageToClipboard(canvas, format);
+      };
 
-// Move this whole function **outside** to the main scope of `initScreenshotTool`
-async function copyImageToClipboard(canvas, format = "png") {
-  try {
-    let blob;
+      const cancelBtn = document.createElement("button");
+      cancelBtn.textContent = "Cancel";
+      cancelBtn.style.cssText = "padding: 8px 16px; background: #ef4444; color: white; border: none; border-radius: 6px;";
 
-    if (format === "jpeg" || format === "jpg") {
-      blob = await new Promise(resolve => canvas.toBlob(resolve, "image/jpeg", 1.0));
-    } else if (format === "webp") {
-      blob = await new Promise(resolve => canvas.toBlob(resolve, "image/webp", 1.0));
-    } else {
-      blob = await new Promise(resolve => canvas.toBlob(resolve, "image/png"));
-    }
+      cancelBtn.onclick = () => {
+        previewBox.remove();
+        screenshotBtn.disabled = false;
+        captureShotBtn.disabled = false;
+      };
 
-    if (!blob) throw new Error("Failed to create image blob");
-
-    // Copy image to clipboard
-    await navigator.clipboard.write([
-      new ClipboardItem({ [blob.type]: blob })
-    ]);
-
-    // Copy image URL to clipboard
-    const imageURL = URL.createObjectURL(blob);
-    await navigator.clipboard.writeText(imageURL);
-
-    alert("Screenshot and link copied to clipboard!");
-  } catch (error) {
-    console.error("Clipboard copy failed:", error);
-    alert("Failed to copy to clipboard.");
-  }
-}
       btnWrapper.appendChild(downloadBtn);
       btnWrapper.appendChild(clipboardBtn);
       btnWrapper.appendChild(cancelBtn);
@@ -660,5 +630,23 @@ async function copyImageToClipboard(canvas, format = "png") {
       previewBox.appendChild(btnWrapper);
       document.body.appendChild(previewBox);
     }
+
+    // Moved here to the proper scope
+    async function copyImageToClipboard(canvas, format = "png") {
+  try {
+    // Fallback method: Copy Data URL as text
+    const dataURL = canvas.toDataURL("image/" + format, 1.0);
+    await navigator.clipboard.writeText(dataURL);
+
+    alert("Image data URL copied to clipboard!\nYou can paste it in image fields or messages.");
+  } catch (error) {
+    console.error("Clipboard copy failed:", error);
+    alert("Failed to copy image to clipboard. Try a supported browser over HTTPS.");
+  }
+}
+if (!window.ClipboardItem || !navigator.clipboard.write) {
+  clipboardBtn.disabled = true;
+  clipboardBtn.textContent = "Clipboard Not Supported";
+}
   }
 })();
