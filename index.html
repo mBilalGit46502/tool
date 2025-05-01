@@ -1,17 +1,25 @@
 <!DOCTYPE html>
-<html>
-
+<html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport"
-    content="width=device-width, initial-scale=1">
-  <title>smartToolBox</title>
-  <link rel="stylesheet" href="style.css" type="text/css" media="all" />
-  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Smart Toolbox</title>
+  <link rel="stylesheet" href="style.css" />
 </head>
-
 <body>
-  <script src="tool.js" type="text/javascript" charset="utf-8"></script>
-</body>
+  <div class="smart-toolbox expanded" id="toolbox">
+    <div class="toolbox-header">
+      <h2>Toolbox</h2>
+      <button class="minimize-btn" id="minimizeBtn">−</button>
+    </div>
+    <div class="toolbox-tools" id="toolList">
+      <button class="tool-btn" data-tool="highlighter">Highlighter</button>
+      <button class="tool-btn" data-tool="print">Print</button>
+      <button class="tool-btn" data-tool="download">Download</button>
+      <button class="tool-btn theme-toggle">Toggle Theme</button>
+    </div>
+  </div>
 
+  <script src="tool.js"></script>
+</body>
 </html>
