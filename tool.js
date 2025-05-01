@@ -461,18 +461,18 @@ document.addEventListener("mouseup", () => {
           <option value="yes">Yes</option>
           <option value="no">No</option>
         </select>
-        <label style="display:block; margin:8px 0 4px;">Download Format:</label>
+        <label style="display:block; margin:8px 0 4px;">Image Format:</label>
         <select id="imageFormat" style="width:100%;padding:6px;border-radius:6px;">
           <option value="png">PNG</option>
           <option value="jpeg">JPG</option>
-          <option value="webp">WebP</option>
+          <option value="webp">WEBP</option>
         </select>
         <button id="captureShot" style="width:100%;margin-top:10px;padding:10px;background:#0f766e;color:white;border:none;border-radius:6px;">Capture</button>
       </div>
     `;
     toolsArea.appendChild(optionsBox);
 
-    let captureShotBtn = optionsBox.querySelector("#captureShot");
+    const captureShotBtn = optionsBox.querySelector("#captureShot");
 
     screenshotBtn.onclick = () => {
       const isVisible = optionsBox.style.display === "block";
@@ -484,6 +484,7 @@ document.addEventListener("mouseup", () => {
     function autoCapture() {
       const type = optionsBox.querySelector("#ssType").value;
       const includeToolbox = optionsBox.querySelector("#includeToolbox").value === "yes";
+      const format = optionsBox.querySelector("#imageFormat").value;
       screenshotBtn.disabled = true;
       captureShotBtn.disabled = true;
 
@@ -491,14 +492,14 @@ document.addEventListener("mouseup", () => {
         if (!includeToolbox) toolbox.style.display = "none";
         html2canvas(document.body, { scale: 10, useCORS: true }).then(canvas => {
           if (!includeToolbox) toolbox.style.display = "block";
-          showPreview(canvas);
+          showPreview(canvas, format);
         });
       } else {
-        selectCustomArea(includeToolbox);
+        selectCustomArea(includeToolbox, format);
       }
     }
 
-    function selectCustomArea(includeToolbox) {
+    function selectCustomArea(includeToolbox, format) {
       const selector = document.createElement("div");
       selector.style.cssText = `
         position: fixed; border: 2px dashed red; background: rgba(255,0,0,0.1);
@@ -539,12 +540,12 @@ document.addEventListener("mouseup", () => {
           y: rect.top,
           width: rect.width,
           height: rect.height,
-          scale: 10,  // High resolution
+          scale: 10,
           useCORS: true,
           scrollY: -window.scrollY
         }).then(canvas => {
           if (!includeToolbox) toolbox.style.display = "block";
-          showPreview(canvas);
+          showPreview(canvas, format);
         });
 
         document.removeEventListener("mousedown", start);
@@ -563,7 +564,8 @@ document.addEventListener("mouseup", () => {
       document.addEventListener("touchend", end);
     }
 
-    function showPreview(canvas) {
+    function showPreview(canvas, format) {
+      const dataURL = canvas.toDataURL("image/" + format, 1.0);
       const previewBox = document.createElement("div");
       previewBox.style.cssText = `
         position: fixed; top: 10%; left: 50%; transform: translateX(-50%);
@@ -584,9 +586,6 @@ document.addEventListener("mouseup", () => {
         captureShotBtn.disabled = false;
       };
 
-      const format = document.getElementById("imageFormat").value;
-      const dataURL = canvas.toDataURL(`image/${format}`, 1.0);
-
       const img = new Image();
       img.src = dataURL;
       img.style.cssText = `max-width: 100%; height: auto; border-radius: 6px; display: block;`;
@@ -595,29 +594,15 @@ document.addEventListener("mouseup", () => {
       btnWrapper.style.cssText = "margin-top: 10px; text-align: center;";
 
       const downloadBtn = document.createElement("button");
-      downloadBtn.textContent = `Download (${format})`;
+      downloadBtn.textContent = `Download (${format.toUpperCase()})`;
       downloadBtn.style.cssText = "padding: 8px 16px; background: #22c55e; color: white; border: none; border-radius: 6px; margin-right: 10px;";
       downloadBtn.onclick = () => {
-        downloadImage(dataURL, format);
-        previewBox.remove();
-        screenshotBtn.disabled = false;
-        captureShotBtn.disabled = false;
+        const a = document.createElement("a");
+        a.href = dataURL;
+        a.download = `screenshot.${format}`;
+        a.click();
       };
 
-      const copyBtn = document.createElement("button");
-copyBtn.textContent = "Copy to Clipboard";
-copyBtn.style.cssText = "padding: 8px 16px; background: #3b82f6; color: white; border: none; border-radius: 6px; margin-right: 10px;";
-copyBtn.onclick = async () => {
-  const blob = await (await fetch(dataURL)).blob();
-  try {
-    // Write to clipboard with high resolution image
-    await navigator.clipboard.write([new ClipboardItem({ [blob.type]: blob })]);
-    copyBtn.textContent = "Copied!";
-    setTimeout(() => (copyBtn.textContent = "Copy to Clipboard"), 1500);
-  } catch (err) {
-    alert("Clipboard copy failed: " + err);
-  }
-};
       const cancelBtn = document.createElement("button");
       cancelBtn.textContent = "Cancel";
       cancelBtn.style.cssText = "padding: 8px 16px; background: #ef4444; color: white; border: none; border-radius: 6px;";
@@ -627,23 +612,37 @@ copyBtn.onclick = async () => {
         captureShotBtn.disabled = false;
       };
 
+      const clipboardBtn = document.createElement("button");
+      clipboardBtn.textContent = `Copy to Clipboard (${format.toUpperCase()} + URL)`;
+      clipboardBtn.style.cssText = "padding: 8px 16px; background: #0ea5e9; color: white; border: none; border-radius: 6px; margin-left: 10px;";
+      clipboardBtn.onclick = () => {
+        canvas.toBlob(blob => {
+          const item = new ClipboardItem({
+            ["image/" + format]: blob,
+            "text/plain": new Blob([window.location.href], { type: "text/plain" })
+          });
+          navigator.clipboard.write([
+  new ClipboardItem({
+    ["image/" + format]: blob,
+    "text/plain": new Blob([window.location.href], { type: "text/plain" })
+  })
+])
+.then(() => alert("Copied image and URL successfully!"))
+.catch(() => {
+  navigator.clipboard.writeText(window.location.href)
+    .then(() => alert("Only URL copied (image unsupported by your browser)."))
+    .catch(() => alert("Clipboard copy failed."));
+});
+        }, "image/" + format, 1.0);
+      };
+
       btnWrapper.appendChild(downloadBtn);
-      btnWrapper.appendChild(copyBtn);
+      btnWrapper.appendChild(clipboardBtn);
       btnWrapper.appendChild(cancelBtn);
       previewBox.appendChild(closeBtn);
       previewBox.appendChild(img);
       previewBox.appendChild(btnWrapper);
       document.body.appendChild(previewBox);
-    }
-
-    function downloadImage(dataURL, format) {
-      const a = document.createElement("a");
-      const siteName = window.location.hostname.replace("www.", "").split(".")[0];
-      const pageTitle = document.title.replace(/[^a-zA-Z0-9]/g, '_');
-      const filename = `${siteName}-${pageTitle}-screenshot.${format}`;
-      a.href = dataURL;
-      a.download = filename;
-      a.click();
     }
   }
 })();
