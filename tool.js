@@ -318,18 +318,75 @@ document.addEventListener("mouseup", () => {
           selector.remove();
           if (!includeToolbox) toolbox.style.display = "none";
 
-          html2canvas(document.body, {
+          // Capture the screenshot in high resolution (HD/8K)
+html2canvas(document.body, {
   x: rect.left,
   y: rect.top,
   width: rect.width,
   height: rect.height,
-  scale: 10, // Very high scale for 12K look
+  scale: 10, // High scale for high resolution (8K/12K)
   useCORS: true,
-  scrollY: -window.scrollY
+  scrollY: -window.scrollY // Avoid scroll issues when capturing
 }).then(canvas => {
-  if (!includeToolbox) toolbox.style.display = "block";
-  showPreview(canvas);
+  // Convert the canvas to a Data URL (high-quality image)
+  const dataURL = canvas.toDataURL("image/png", 1.0); // High-quality output
+
+  // Trigger immediate download after capturing the screenshot
+  downloadImage(dataURL);
 });
+
+// Function to download the image immediately with a dynamic name
+function downloadImage(dataURL) {
+  const a = document.createElement("a");
+
+  // Get the dynamic filename from the website's domain name and page title
+  const siteName = window.location.hostname.replace("www.", "").split(".")[0]; // Extracts the website's domain name
+  const pageTitle = document.title.replace(/[^a-zA-Z0-9]/g, '_'); // Replaces any special characters in page title
+
+  // Construct the dynamic filename using site name and page title
+  const filename = `${siteName}-${pageTitle}-screenshot.png`;
+
+  a.href = dataURL;
+  a.download = filename; // Use dynamic filename
+  a.click(); // Trigger the download
+}
+
+// Function to show the image preview (optional)
+function showPreview(dataURL) {
+  const previewBox = document.createElement("div");
+  previewBox.style.cssText = `
+    position: fixed; top: 10%; left: 50%; transform: translateX(-50%);
+    background: white; padding: 10px; border-radius: 8px;
+    box-shadow: 0 0 20px rgba(0,0,0,0.3); z-index: 10000;
+    max-width: 90%; max-height: 80%; overflow: auto;
+  `;
+
+  const closeBtn = document.createElement("button");
+  closeBtn.textContent = "×";
+  closeBtn.style.cssText = `
+    position: absolute; top: 4px; right: 10px;
+    font-size: 22px; background: none; border: none; cursor: pointer;
+  `;
+  closeBtn.onclick = () => previewBox.remove();
+
+  const img = new Image();
+  img.src = dataURL;
+  img.style.cssText = `max-width: 100%; height: auto; border-radius: 6px; display: block;`;
+
+  const btnWrapper = document.createElement("div");
+  btnWrapper.style.cssText = "margin-top: 10px; text-align: center;";
+
+  const cancelBtn = document.createElement("button");
+  cancelBtn.textContent = "Cancel";
+  cancelBtn.style.cssText = "padding: 8px 16px; background: #ef4444; color: white; border: none; border-radius: 6px;";
+  cancelBtn.onclick = () => previewBox.remove();
+
+  btnWrapper.appendChild(cancelBtn);
+  previewBox.appendChild(closeBtn);
+  previewBox.appendChild(img);
+  previewBox.appendChild(btnWrapper);
+  document.body.appendChild(previewBox);
+}
           document.removeEventListener("mousemove", move);
           document.removeEventListener("mouseup", end);
           document.removeEventListener("touchmove", move);
@@ -345,68 +402,7 @@ document.addEventListener("mouseup", () => {
       }
     });
 
-    function showPreview(canvas) {
-  const dataURL = canvas.toDataURL("image/png");
-
-  const previewBox = document.createElement("div");
-  previewBox.style.cssText = `
-    position: fixed; top: 10%; left: 50%; transform: translateX(-50%);
-    background: white; padding: 10px; border-radius: 8px;
-    box-shadow: 0 0 20px rgba(0,0,0,0.3); z-index: 10000;
-    max-width: 90%; max-height: 80%; overflow: auto;
-  `;
-
-  const closePreview = () => {
-    previewBox.remove();
-    screenshotBtn.disabled = false;
-    captureBtn.disabled = false;
-  };
-
-  const closeBtn = document.createElement("button");
-  closeBtn.textContent = "×";
-  closeBtn.style.cssText = `
-    position: absolute; top: 4px; right: 10px;
-    font-size: 22px; background: none; border: none; cursor: pointer;
-  `;
-  closeBtn.onclick = closePreview;
-
-  const img = new Image();
-  img.src = dataURL;
-  img.style.cssText = `max-width: 100%; height: auto; border-radius: 6px; display: block;`;
-
-  const btnWrapper = document.createElement("div");
-  btnWrapper.style.cssText = "margin-top: 10px; text-align: center;";
-
-  const downloadBtn = document.createElement("button");
-  downloadBtn.textContent = "Download";
-  downloadBtn.style.cssText = "padding: 8px 16px; background: #22c55e; color: white; border: none; border-radius: 6px; margin-right: 10px;";
-  downloadBtn.onclick = () => {
-    const a = document.createElement("a");
-    const siteName = window.location.hostname.replace("www.", "").split(".")[0];
-    a.href = dataURL;
-    a.download = `${siteName}-screenshot.png`;
-    a.click();
-    closePreview(); // Re-enable buttons after download
-  };
-
-  const cancelBtn = document.createElement("button");
-  cancelBtn.textContent = "Cancel";
-  cancelBtn.style.cssText = "padding: 8px 16px; background: #ef4444; color: white; border: none; border-radius: 6px;";
-  cancelBtn.onclick = closePreview;
-
-  btnWrapper.appendChild(downloadBtn);
-  btnWrapper.appendChild(cancelBtn);
-
-  previewBox.appendChild(closeBtn);
-  previewBox.appendChild(img);
-  previewBox.appendChild(btnWrapper);
-  document.body.appendChild(previewBox);
-
-  // Disable buttons while preview is shown
-  screenshotBtn.disabled = true;
-  const captureBtn = document.querySelector("#captureShot");
-  if (captureBtn) captureBtn.disabled = true;
-}
+    
   }
   
 })();
