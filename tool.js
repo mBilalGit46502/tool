@@ -222,7 +222,7 @@ document.addEventListener("mouseup", () => {
 
 
 // for screenshot understand 
-
+/*
 (function () {
   const html2canvasScript = document.createElement("script");
   html2canvasScript.src = "https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js";
@@ -422,9 +422,9 @@ document.addEventListener("mouseup", () => {
   }
 })();
 
+*/
 
 
-/*
 
 (function () {
   const html2canvasScript = document.createElement("script");
@@ -659,4 +659,3 @@ async function copyImageToClipboard(canvas, format = "png") {
     }
   }
 })();
-*/
