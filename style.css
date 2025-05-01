@@ -11,7 +11,7 @@ body.dark-mode {
   color: #eee;
 }
 
-/* Smart Toolbox Styles */
+/* === Toolbox Styles === */
 .smart-toolbox {
   position: fixed;
   top: 50%;
@@ -24,6 +24,7 @@ body.dark-mode {
   width: 220px;
   transition: all 0.3s ease;
   z-index: 9999;
+  cursor: move;
 }
 
 .smart-toolbox.dark {
@@ -34,6 +35,7 @@ body.dark-mode {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  cursor: grab;
 }
 
 .toolbox-tools {
@@ -70,7 +72,6 @@ body.dark-mode {
   color: #444;
 }
 
-/* Minimized Style */
 .smart-toolbox.minimized {
   width: 60px;
   padding: 0.5rem;
