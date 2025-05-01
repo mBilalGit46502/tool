@@ -19,6 +19,9 @@
     z-index: 9999;
     font-family: 'Segoe UI', sans-serif;
     user-select: none;
+    display:flex;
+    flex-direction:column;
+    justify-content:space-evenly;
   `;
 
   // Header
@@ -228,11 +231,11 @@ document.addEventListener("mouseup", () => {
     clearInterval(waitForToolbox);
     const toolsArea = toolbox.querySelector("div:nth-child(2)");
 
-    // Screenshot Button
     const screenshotBtn = document.createElement("button");
     screenshotBtn.textContent = "Screenshot";
     screenshotBtn.style.cssText = `
       width: 100%;
+      margin-top:10px;
       padding: 10px;
       margin-bottom: 10px;
       font-weight: bold;
@@ -244,7 +247,6 @@ document.addEventListener("mouseup", () => {
     `;
     toolsArea.appendChild(screenshotBtn);
 
-    // Option Box
     const optionsBox = document.createElement("div");
     optionsBox.style.display = "none";
     optionsBox.innerHTML = `
@@ -258,7 +260,6 @@ document.addEventListener("mouseup", () => {
       optionsBox.style.display = optionsBox.style.display === "none" ? "block" : "none";
     });
 
-    // Load html2canvas
     function loadHtml2Canvas(callback) {
       if (window.html2canvas) return callback();
       const script = document.createElement("script");
@@ -267,49 +268,92 @@ document.addEventListener("mouseup", () => {
       document.body.appendChild(script);
     }
 
-    // Full Page Screenshot
+    function showPreview(canvas) {
+      const previewOverlay = document.createElement("div");
+      previewOverlay.style.cssText = `
+        position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+        background: rgba(0,0,0,0.7); z-index: 999999;
+        display: flex; justify-content: center; align-items: center;
+        flex-direction: column; padding: 20px;
+      `;
+
+      const previewImg = new Image();
+      previewImg.src = canvas.toDataURL("image/png");
+      previewImg.style.maxWidth = "90%";
+      previewImg.style.maxHeight = "80%";
+      previewImg.style.border = "4px solid white";
+      previewImg.style.borderRadius = "10px";
+
+      const btns = document.createElement("div");
+      btns.style.marginTop = "15px";
+
+      const downloadBtn = document.createElement("button");
+      downloadBtn.textContent = "Download";
+      downloadBtn.style.cssText = `
+        padding: 10px 16px; background: #22c55e; color: white;
+        border: none; border-radius: 6px; margin-right: 10px;
+        font-weight: bold;
+      `;
+
+      const cancelBtn = document.createElement("button");
+      cancelBtn.textContent = "Cancel";
+      cancelBtn.style.cssText = `
+        padding: 10px 16px; background: #ef4444; color: white;
+        border: none; border-radius: 6px; font-weight: bold;
+      `;
+
+      btns.appendChild(downloadBtn);
+      btns.appendChild(cancelBtn);
+      previewOverlay.appendChild(previewImg);
+      previewOverlay.appendChild(btns);
+      document.body.appendChild(previewOverlay);
+
+      downloadBtn.onclick = () => {
+        const link = document.createElement("a");
+        link.href = canvas.toDataURL("image/png");
+        link.download = "screenshot.png";
+        link.click();
+        previewOverlay.remove();
+      };
+
+      cancelBtn.onclick = () => {
+        previewOverlay.remove();
+      };
+    }
+
     optionsBox.querySelector("#fullShot").addEventListener("click", () => {
       optionsBox.style.display = "none";
       loadHtml2Canvas(() => {
-        html2canvas(document.body).then(canvas => {
-          const link = document.createElement("a");
-          link.href = canvas.toDataURL("image/png");
-          link.download = "full_screenshot.png";
-          link.click();
+        html2canvas(document.body, {
+          scale: 3 // higher resolution
+        }).then(canvas => {
+          showPreview(canvas);
         });
       });
     });
 
-    // Custom Area Screenshot
     optionsBox.querySelector("#customShot").addEventListener("click", () => {
       optionsBox.style.display = "none";
 
       const overlay = document.createElement("div");
       overlay.style.cssText = `
-        position: fixed;
-        top: 0; left: 0;
-        width: 100vw; height: 100vh;
-        background: rgba(0,0,0,0.2);
-        z-index: 999999;
-        cursor: crosshair;
+        position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+        background: rgba(0,0,0,0.2); z-index: 999999; cursor: crosshair;
       `;
       document.body.appendChild(overlay);
 
-      let startX, startY, selectionBox;
+      let startX, startY, box;
 
       function start(e) {
-        e.preventDefault();
         startX = (e.touches ? e.touches[0].clientX : e.clientX);
         startY = (e.touches ? e.touches[0].clientY : e.clientY);
 
-        selectionBox = document.createElement("div");
-        selectionBox.style.cssText = `
-          position: absolute;
-          border: 2px dashed red;
-          background: rgba(255,255,255,0.4);
-          pointer-events: none;
+        box = document.createElement("div");
+        box.style.cssText = `
+          position: absolute; border: 2px dashed red;
+          background: rgba(255,255,255,0.3);
         `;
-        overlay.appendChild(selectionBox);
+        overlay.appendChild(box);
 
         document.addEventListener("mousemove", draw);
         document.addEventListener("mouseup", end);
@@ -320,26 +364,26 @@ document.addEventListener("mouseup", () => {
       function draw(e) {
         const x = (e.touches ? e.touches[0].clientX : e.clientX);
         const y = (e.touches ? e.touches[0].clientY : e.clientY);
-
         const left = Math.min(x, startX);
         const top = Math.min(y, startY);
         const width = Math.abs(x - startX);
         const height = Math.abs(y - startY);
 
-        selectionBox.style.left = left + "px";
-        selectionBox.style.top = top + "px";
-        selectionBox.style.width = width + "px";
-        selectionBox.style.height = height + "px";
+        Object.assign(box.style, {
+          left: left + "px",
+          top: top + "px",
+          width: width + "px",
+          height: height + "px"
+        });
       }
 
-      function end(e) {
+      function end() {
+        const rect = box.getBoundingClientRect();
+        overlay.remove();
         document.removeEventListener("mousemove", draw);
         document.removeEventListener("mouseup", end);
         document.removeEventListener("touchmove", draw);
         document.removeEventListener("touchend", end);
-
-        const rect = selectionBox.getBoundingClientRect();
-        overlay.remove();
 
         loadHtml2Canvas(() => {
           html2canvas(document.body, {
@@ -349,11 +393,9 @@ document.addEventListener("mouseup", () => {
             height: rect.height,
             windowWidth: document.documentElement.scrollWidth,
             windowHeight: document.documentElement.scrollHeight,
+            scale: 3
           }).then(canvas => {
-            const link = document.createElement("a");
-            link.href = canvas.toDataURL("image/png");
-            link.download = "selected_area.png";
-            link.click();
+            showPreview(canvas);
           });
         });
       }
