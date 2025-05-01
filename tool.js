@@ -616,14 +616,12 @@ document.addEventListener("mouseup", () => {
       clipboardBtn.textContent = `Copy to Clipboard (${format.toUpperCase()} + URL)`;
       clipboardBtn.style.cssText = "padding: 8px 16px; background: #0ea5e9; color: white; border: none; border-radius: 6px; margin-left: 10px;";
       clipboardBtn.onclick = () => {
-        canvas.toBlob(blob => {
-          const item = new ClipboardItem({
-            ["image/" + format]: blob,
-            "text/plain": new Blob([window.location.href], { type: "text/plain" })
-          });
-        async function copyImageToClipboard(element, format = "png") {
+  copyImageToClipboard(canvas, format);
+};
+
+// Move this whole function **outside** to the main scope of `initScreenshotTool`
+async function copyImageToClipboard(canvas, format = "png") {
   try {
-    const canvas = await html2canvas(element, { scale: 10 });
     let blob;
 
     if (format === "jpeg" || format === "jpg") {
@@ -636,25 +634,21 @@ document.addEventListener("mouseup", () => {
 
     if (!blob) throw new Error("Failed to create image blob");
 
-    // Copy the image to clipboard
+    // Copy image to clipboard
     await navigator.clipboard.write([
       new ClipboardItem({ [blob.type]: blob })
     ]);
 
-    // Create temporary blob URL and copy the image link too
+    // Copy image URL to clipboard
     const imageURL = URL.createObjectURL(blob);
     await navigator.clipboard.writeText(imageURL);
 
-    alert("Image and its link copied successfully to clipboard!");
-
+    alert("Screenshot and link copied to clipboard!");
   } catch (error) {
     console.error("Clipboard copy failed:", error);
-    alert("Clipboard copy failed. Try again.");
+    alert("Failed to copy to clipboard.");
   }
 }
-        }, "image/" + format, 1.0);
-      };
-
       btnWrapper.appendChild(downloadBtn);
       btnWrapper.appendChild(clipboardBtn);
       btnWrapper.appendChild(cancelBtn);
