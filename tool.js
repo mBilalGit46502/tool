@@ -598,8 +598,11 @@ document.addEventListener("mouseup", () => {
       downloadBtn.style.cssText = "padding: 8px 16px; background: #22c55e; color: white; border: none; border-radius: 6px; margin-right: 10px;";
       downloadBtn.onclick = () => {
         const a = document.createElement("a");
+        
         a.href = dataURL;
-        a.download = `screenshot.${format}`;
+       const websiteName = location.hostname.replace(/\W+/g, "-");
+const pageName = document.title.trim().replace(/\W+/g, "-");
+a.download = `${websiteName}-${pageName}.${format}`;
         a.click();
       };
 
