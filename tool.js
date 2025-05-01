@@ -621,18 +621,23 @@ document.addEventListener("mouseup", () => {
             ["image/" + format]: blob,
             "text/plain": new Blob([window.location.href], { type: "text/plain" })
           });
-          navigator.clipboard.write([
-  new ClipboardItem({
-    ["image/" + format]: blob,
-    "text/plain": new Blob([window.location.href], { type: "text/plain" })
-  })
-])
-.then(() => alert("Copied image and URL successfully!"))
-.catch(() => {
-  navigator.clipboard.writeText(window.location.href)
-    .then(() => alert("Only URL copied (image unsupported by your browser)."))
-    .catch(() => alert("Clipboard copy failed."));
-});
+        const copyToClipboard = async (blob, format = "png") => {
+  try {
+    const item = new ClipboardItem({ ["image/" + format]: blob });
+    await navigator.clipboard.write([item]);
+
+    // Create a temporary blob URL for image
+    const imageUrl = URL.createObjectURL(blob);
+
+    // Copy the image URL
+    await navigator.clipboard.writeText(imageUrl);
+
+    alert("Image and its link copied successfully!");
+  } catch (error) {
+    console.error("Clipboard copy failed:", error);
+    alert("Clipboard copy failed. Try again.");
+  }
+};
         }, "image/" + format, 1.0);
       };
 
