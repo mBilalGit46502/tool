@@ -612,6 +612,12 @@ document.addEventListener("mouseup", () => {
         copyImageToClipboard(canvas, format);
       };
 
+      // Check Clipboard support after button creation
+      if (!window.ClipboardItem || !navigator.clipboard.write) {
+        clipboardBtn.disabled = true;
+        clipboardBtn.textContent = "Clipboard Not Supported";
+      }
+
       const cancelBtn = document.createElement("button");
       cancelBtn.textContent = "Cancel";
       cancelBtn.style.cssText = "padding: 8px 16px; background: #ef4444; color: white; border: none; border-radius: 6px;";
@@ -631,22 +637,15 @@ document.addEventListener("mouseup", () => {
       document.body.appendChild(previewBox);
     }
 
-    // Moved here to the proper scope
     async function copyImageToClipboard(canvas, format = "png") {
-  try {
-    // Fallback method: Copy Data URL as text
-    const dataURL = canvas.toDataURL("image/" + format, 1.0);
-    await navigator.clipboard.writeText(dataURL);
-
-    alert("Image data URL copied to clipboard!\nYou can paste it in image fields or messages.");
-  } catch (error) {
-    console.error("Clipboard copy failed:", error);
-    alert("Failed to copy image to clipboard. Try a supported browser over HTTPS.");
-  }
-}
-if (!window.ClipboardItem || !navigator.clipboard.write) {
-  clipboardBtn.disabled = true;
-  clipboardBtn.textContent = "Clipboard Not Supported";
-}
+      try {
+        const dataURL = canvas.toDataURL("image/" + format, 1.0);
+        await navigator.clipboard.writeText(dataURL);
+        alert("Image data URL copied to clipboard!");
+      } catch (error) {
+        console.error("Clipboard copy failed:", error);
+        alert("Failed to copy image to clipboard. Try a supported browser over HTTPS.");
+      }
+    }
   }
 })();
