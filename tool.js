@@ -8,8 +8,8 @@
   // Styling
   toolbox.style.cssText = `
     position: fixed;
-    top: 100px;
-    left: 20px;
+    top: 400px;
+    right: 20px;
     background: rgba(255, 255, 255, 0.8);
     backdrop-filter: blur(10px);
     border: 1px solid #ddd;
