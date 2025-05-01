@@ -12,7 +12,7 @@ body.dark-mode {
 }
 
 /* === Toolbox Styles === */
-.smart-toolbox {
+.smart-toolbox-container {
   position: fixed;
   top: 50%;
   right: 0;
@@ -27,7 +27,7 @@ body.dark-mode {
   cursor: move;
 }
 
-.smart-toolbox.dark {
+.smart-toolbox-container.dark {
   background: #1f1f1f;
 }
 
