@@ -1,115 +1,69 @@
-// ========== [THEME TOGGLE COMPONENT] ==========
-document.querySelector(".theme-toggle").addEventListener("click", () => {
-  document.body.classList.toggle("dark-mode");
-  document.getElementById("toolbox").classList.toggle("dark");
+// ========== [DOWNLOAD FUNCTIONALITY COMPONENT] ==========
 
-  localStorage.setItem("theme", document.body.classList.contains("dark-mode") ? "dark" : "light");
+const toolboxElement = document.getElementById("toolbox");
+const downloadBtn = document.getElementById("downloadBtn");
+const downloadOptions = document.getElementById("downloadOptions");
+const confirmDownload = document.getElementById("confirmDownload");
+const cancelDownload = document.getElementById("cancelDownload");
+const formatSelect = document.getElementById("downloadFormat");
+
+downloadBtn.addEventListener("click", () => {
+  downloadOptions.classList.toggle("hidden");
 });
 
-window.addEventListener("DOMContentLoaded", () => {
-  if (localStorage.getItem("theme") === "dark") {
-    document.body.classList.add("dark-mode");
-    document.getElementById("toolbox").classList.add("dark");
+// Cancel Option
+cancelDownload.addEventListener("click", () => {
+  downloadOptions.classList.add("hidden");
+});
+
+// Confirm Download
+confirmDownload.addEventListener("click", () => {
+  const format = formatSelect.value;
+  const content = document.body.cloneNode(true);
+
+  // Hide toolbox from content
+  const toolboxClone = content.querySelector("#toolbox");
+  if (toolboxClone) toolboxClone.remove();
+
+  if (format === "pdf") {
+    // Use print-to-pdf (simple API-free approach)
+    toolboxElement.style.display = "none";
+    window.print();
+    setTimeout(() => (toolboxElement.style.display = ""), 1000);
   }
-});
-// ========== [END THEME TOGGLE COMPONENT] ==========
 
-
-// ========== [MINIMIZE / EXPAND COMPONENT] ==========
-const toolbox = document.getElementById("toolbox");
-const minimizeBtn = document.getElementById("minimizeBtn");
-
-minimizeBtn.addEventListener("click", () => {
-  toolbox.classList.toggle("minimized");
-  toolbox.classList.toggle("expanded");
-
-  minimizeBtn.textContent = toolbox.classList.contains("minimized") ? "+" : "−";
-});
-// ========== [END MINIMIZE / EXPAND COMPONENT] ==========
-
-
-// ========== [TOOL ACTIONS COMPONENT] ==========
-const toolActions = {
-  highlighter: {
-    active: false,
-    activate: () => console.log("Highlighter ON"),
-    deactivate: () => console.log("Highlighter OFF")
-  },
-
-  // Print Page excluding Toolbox
-  print: {
-    active: false,
-    activate: () => {
-      const toolbox = document.getElementById("toolbox");
-      toolbox.style.display = "none";
-      window.print();
-      setTimeout(() => (toolbox.style.display = ""), 1000);
-    },
-    deactivate: () => {}
-  },
-
-  // Download Text File
-  download: {
-    active: false,
-    activate: () => {
-      const toolbox = document.getElementById("toolbox");
-      toolbox.style.display = "none";
-
-      const blob = new Blob(["Downloaded from Smart Toolbox"], { type: "text/plain" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = "smart-toolbox.txt";
-      a.click();
-      URL.revokeObjectURL(url);
-
-      setTimeout(() => (toolbox.style.display = ""), 1000);
-    },
-    deactivate: () => {}
+  else if (format === "html") {
+    const htmlBlob = new Blob(["<!DOCTYPE html>" + content.innerHTML], {
+      type: "text/html",
+    });
+    const url = URL.createObjectURL(htmlBlob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "page.html";
+    a.click();
+    URL.revokeObjectURL(url);
   }
-};
 
-document.querySelectorAll(".tool-btn").forEach(btn => {
-  const tool = btn.dataset.tool;
-  if (!tool) return;
+  else if (format === "json") {
+    // Example JSON (customizable later)
+    const pageData = {
+      title: document.title,
+      url: window.location.href,
+      date: new Date().toLocaleString(),
+      contentPreview: content.innerText.slice(0, 200)
+    };
+    const jsonBlob = new Blob([JSON.stringify(pageData, null, 2)], {
+      type: "application/json",
+    });
+    const url = URL.createObjectURL(jsonBlob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "page.json";
+    a.click();
+    URL.revokeObjectURL(url);
+  }
 
-  btn.addEventListener("click", () => {
-    const t = toolActions[tool];
-    if (!t) return;
-
-    t.active = !t.active;
-    btn.classList.toggle("active", t.active);
-
-    if (t.active) t.activate();
-    else t.deactivate();
-  });
-});
-// ========== [END TOOL ACTIONS COMPONENT] ==========
-
-
-// ========== [DRAG & DROP TOOLBOX COMPONENT] ==========
-const dragHandle = document.getElementById("dragHandle");
-
-let isDragging = false;
-let offsetX, offsetY;
-
-dragHandle.addEventListener("mousedown", (e) => {
-  isDragging = true;
-  offsetX = e.clientX - toolbox.offsetLeft;
-  offsetY = e.clientY - toolbox.offsetTop;
-  dragHandle.style.cursor = "grabbing";
+  downloadOptions.classList.add("hidden");
 });
 
-document.addEventListener("mouseup", () => {
-  isDragging = false;
-  dragHandle.style.cursor = "grab";
-});
-
-document.addEventListener("mousemove", (e) => {
-  if (!isDragging) return;
-  toolbox.style.top = `${e.clientY - offsetY}px`;
-  toolbox.style.left = `${e.clientX - offsetX}px`;
-  toolbox.style.right = "auto";
-  toolbox.style.transform = "none";
-});
-// ========== [END DRAG & DROP TOOLBOX COMPONENT] ==========
+// ========== [END DOWNLOAD FUNCTIONALITY COMPONENT] ==========

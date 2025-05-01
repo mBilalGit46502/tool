@@ -84,3 +84,19 @@ body.dark-mode {
 .smart-toolbox.minimized h2 {
   display: none;
 }
+
+.download-options {
+  margin-top: 0.5rem;
+  display: flex;
+  flex-direction: column;
+}
+
+.download-options.hidden {
+  display: none;
+}
+
+.download-options select,
+.download-options button {
+  margin-top: 0.3rem;
+  padding: 0.4rem;
+}

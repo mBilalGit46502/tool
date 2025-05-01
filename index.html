@@ -13,10 +13,28 @@
       <button class="minimize-btn" id="minimizeBtn">−</button>
     </div>
     <div class="toolbox-tools" id="toolList">
-      <button class="tool-btn" data-tool="highlighter">Highlighter</button>
-      <button class="tool-btn" data-tool="print">Print</button>
-      <button class="tool-btn" data-tool="download">Download</button>
-      <button class="tool-btn theme-toggle">Toggle Theme</button>
+      
+      
+     
+<!-- ========== [DOWNLOAD COMPONENT START] ========== -->
+<div id="downloadSection" class="tool-section">
+  <button class="tool-btn" id="downloadBtn">Download</button>
+
+  <div id="downloadOptions" class="download-options hidden">
+    <label>Select format:</label>
+    <select id="downloadFormat">
+      <option value="pdf">PDF</option>
+      <option value="html">HTML</option>
+      <option value="json">JSON</option>
+    </select>
+    <button id="confirmDownload">Confirm</button>
+    <button id="cancelDownload">Cancel</button>
+  </div>
+</div>
+<!-- ========== [DOWNLOAD COMPONENT END] ========== -->
+    
+    
+    
     </div>
   </div>
 
