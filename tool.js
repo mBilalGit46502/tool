@@ -493,7 +493,7 @@ document.addEventListener("mouseup", () => {
         window.scrollTo(0, 0);
 
         html2canvas(document.body, {
-          scale: 4,
+          scale: 10,
           useCORS: true,
           logging: true,
           allowTaint: true,
@@ -550,7 +550,7 @@ document.addEventListener("mouseup", () => {
           y: rect.top,
           width: rect.width,
           height: rect.height,
-          scale: 4,
+          scale: 10,
           useCORS: true,
           scrollY: -window.scrollY
         }).then(canvas => {
