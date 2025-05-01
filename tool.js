@@ -621,23 +621,37 @@ document.addEventListener("mouseup", () => {
             ["image/" + format]: blob,
             "text/plain": new Blob([window.location.href], { type: "text/plain" })
           });
-        const copyToClipboard = async (blob, format = "png") => {
+        async function copyImageToClipboard(element, format = "png") {
   try {
-    const item = new ClipboardItem({ ["image/" + format]: blob });
-    await navigator.clipboard.write([item]);
+    const canvas = await html2canvas(element, { scale: 10 });
+    let blob;
 
-    // Create a temporary blob URL for image
-    const imageUrl = URL.createObjectURL(blob);
+    if (format === "jpeg" || format === "jpg") {
+      blob = await new Promise(resolve => canvas.toBlob(resolve, "image/jpeg", 1.0));
+    } else if (format === "webp") {
+      blob = await new Promise(resolve => canvas.toBlob(resolve, "image/webp", 1.0));
+    } else {
+      blob = await new Promise(resolve => canvas.toBlob(resolve, "image/png"));
+    }
 
-    // Copy the image URL
-    await navigator.clipboard.writeText(imageUrl);
+    if (!blob) throw new Error("Failed to create image blob");
 
-    alert("Image and its link copied successfully!");
+    // Copy the image to clipboard
+    await navigator.clipboard.write([
+      new ClipboardItem({ [blob.type]: blob })
+    ]);
+
+    // Create temporary blob URL and copy the image link too
+    const imageURL = URL.createObjectURL(blob);
+    await navigator.clipboard.writeText(imageURL);
+
+    alert("Image and its link copied successfully to clipboard!");
+
   } catch (error) {
     console.error("Clipboard copy failed:", error);
     alert("Clipboard copy failed. Try again.");
   }
-};
+}
         }, "image/" + format, 1.0);
       };
 
