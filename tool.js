@@ -107,7 +107,7 @@ closeBtn.addEventListener("click", () => {
       <option value="json">JSON</option>
       <option value="txt">TXT</option>
     </select>
-    <div style="margin-top: 10px; display: flex; gap: 10px;">
+    <div style="margin-top: 10px;margin-bottom:10px; display: flex; gap: 10px;">
       <button id="confirmBtn" style="flex:1; padding:6px; background:#10b981; color:white; border:none; border-radius:6px;">Confirm</button>
       <button id="cancelBtn" style="flex:1; padding:6px; background:#ef4444; color:white; border:none; border-radius:6px;">Close</button>
     </div>
