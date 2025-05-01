@@ -217,3 +217,149 @@ document.addEventListener("mouseup", () => {
 });
 })();
 
+
+// for screenshot understand 
+
+(function () {
+  const waitForToolbox = setInterval(() => {
+    const toolbox = document.getElementById("toolbox-container");
+    if (!toolbox) return;
+
+    clearInterval(waitForToolbox);
+    const toolsArea = toolbox.querySelector("div:nth-child(2)");
+
+    // Screenshot Button
+    const screenshotBtn = document.createElement("button");
+    screenshotBtn.textContent = "Screenshot";
+    screenshotBtn.style.cssText = `
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 10px;
+      font-weight: bold;
+      background: linear-gradient(135deg, #22c55e, #16a34a);
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    `;
+    toolsArea.appendChild(screenshotBtn);
+
+    // Option Box
+    const optionsBox = document.createElement("div");
+    optionsBox.style.display = "none";
+    optionsBox.innerHTML = `
+      <label style="display:block;margin:6px 0;">Select Screenshot Type:</label>
+      <button id="fullShot" style="width:100%;padding:6px;margin-bottom:5px;background:#3b82f6;color:white;border:none;border-radius:6px;">Full Page</button>
+      <button id="customShot" style="width:100%;padding:6px;background:#ef4444;color:white;border:none;border-radius:6px;">Select Area</button>
+    `;
+    toolsArea.appendChild(optionsBox);
+
+    screenshotBtn.addEventListener("click", () => {
+      optionsBox.style.display = optionsBox.style.display === "none" ? "block" : "none";
+    });
+
+    // Load html2canvas
+    function loadHtml2Canvas(callback) {
+      if (window.html2canvas) return callback();
+      const script = document.createElement("script");
+      script.src = "https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js";
+      script.onload = callback;
+      document.body.appendChild(script);
+    }
+
+    // Full Page Screenshot
+    optionsBox.querySelector("#fullShot").addEventListener("click", () => {
+      optionsBox.style.display = "none";
+      loadHtml2Canvas(() => {
+        html2canvas(document.body).then(canvas => {
+          const link = document.createElement("a");
+          link.href = canvas.toDataURL("image/png");
+          link.download = "full_screenshot.png";
+          link.click();
+        });
+      });
+    });
+
+    // Custom Area Screenshot
+    optionsBox.querySelector("#customShot").addEventListener("click", () => {
+      optionsBox.style.display = "none";
+
+      const overlay = document.createElement("div");
+      overlay.style.cssText = `
+        position: fixed;
+        top: 0; left: 0;
+        width: 100vw; height: 100vh;
+        background: rgba(0,0,0,0.2);
+        z-index: 999999;
+        cursor: crosshair;
+      `;
+      document.body.appendChild(overlay);
+
+      let startX, startY, selectionBox;
+
+      function start(e) {
+        e.preventDefault();
+        startX = (e.touches ? e.touches[0].clientX : e.clientX);
+        startY = (e.touches ? e.touches[0].clientY : e.clientY);
+
+        selectionBox = document.createElement("div");
+        selectionBox.style.cssText = `
+          position: absolute;
+          border: 2px dashed red;
+          background: rgba(255,255,255,0.4);
+          pointer-events: none;
+        `;
+        overlay.appendChild(selectionBox);
+
+        document.addEventListener("mousemove", draw);
+        document.addEventListener("mouseup", end);
+        document.addEventListener("touchmove", draw);
+        document.addEventListener("touchend", end);
+      }
+
+      function draw(e) {
+        const x = (e.touches ? e.touches[0].clientX : e.clientX);
+        const y = (e.touches ? e.touches[0].clientY : e.clientY);
+
+        const left = Math.min(x, startX);
+        const top = Math.min(y, startY);
+        const width = Math.abs(x - startX);
+        const height = Math.abs(y - startY);
+
+        selectionBox.style.left = left + "px";
+        selectionBox.style.top = top + "px";
+        selectionBox.style.width = width + "px";
+        selectionBox.style.height = height + "px";
+      }
+
+      function end(e) {
+        document.removeEventListener("mousemove", draw);
+        document.removeEventListener("mouseup", end);
+        document.removeEventListener("touchmove", draw);
+        document.removeEventListener("touchend", end);
+
+        const rect = selectionBox.getBoundingClientRect();
+        overlay.remove();
+
+        loadHtml2Canvas(() => {
+          html2canvas(document.body, {
+            x: rect.left,
+            y: rect.top,
+            width: rect.width,
+            height: rect.height,
+            windowWidth: document.documentElement.scrollWidth,
+            windowHeight: document.documentElement.scrollHeight,
+          }).then(canvas => {
+            const link = document.createElement("a");
+            link.href = canvas.toDataURL("image/png");
+            link.download = "selected_area.png";
+            link.click();
+          });
+        });
+      }
+
+      overlay.addEventListener("mousedown", start);
+      overlay.addEventListener("touchstart", start);
+    });
+  }, 500);
+})();
