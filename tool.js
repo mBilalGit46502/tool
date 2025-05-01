@@ -1,3 +1,5 @@
+// for download button and ToolBox Container 
+
 (function () {
   const toolbox = document.createElement("div");
   toolbox.id = "toolbox-container";
@@ -168,6 +170,26 @@ closeBtn.addEventListener("click", () => {
     formatSection.style.display = "none";
   });
 
+// For mouse events (laptop/desktop)
+toolbox.addEventListener("mousedown", (e) => {
+  isDragging = true;
+  offsetX = e.clientX - toolbox.offsetLeft;
+  offsetY = e.clientY - toolbox.offsetTop;
+  document.body.style.userSelect = "none"; // Prevent text selection during dragging
+});
+
+document.addEventListener("mousemove", (e) => {
+  if (isDragging) {
+    toolbox.style.left = `${e.clientX - offsetX}px`;
+    toolbox.style.top = `${e.clientY - offsetY}px`;
+  }
+});
+
+document.addEventListener("mouseup", () => {
+  isDragging = false;
+  document.body.style.userSelect = "";
+});
+
 let offsetX = 0, offsetY = 0, isDragging = false;
 
 // Start dragging — for mouse and touch
@@ -205,3 +227,4 @@ document.addEventListener("touchmove", onDrag);
 document.addEventListener("mouseup", endDrag);
 document.addEventListener("touchend", endDrag);
 })();
+
