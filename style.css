@@ -1,0 +1,83 @@
+/* Base Styles */
+#smartBox {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  background: #2c3e50;
+  color: #ecf0f1;
+  padding: 15px;
+  border-radius: 10px;
+  z-index: 99999;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+  font-family: 'Segoe UI', sans-serif;
+  max-width: 360px;
+  cursor: move;
+  overflow: auto;
+  touch-action: none;
+  transition: transform 0.3s ease;
+}
+
+#smartBox.minimized {
+  transform: scale(0.9);
+  opacity: 0.9;
+}
+
+#smartBox button {
+  margin: 4px;
+  padding: 8px 12px;
+  border: none;
+  border-radius: 5px;
+  background: #3498db;
+  color: white;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+#smartBox button:hover {
+  opacity: 0.8;
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+  #smartBox {
+    max-width: 95%;
+    bottom: 10px;
+    right: 10px;
+    padding: 10px;
+  }
+  
+  #smartBox button {
+    width: 100%;
+    margin: 4px 0;
+  }
+}
+
+/* Modal Styles */
+.smart-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 100000;
+}
+
+.modal-content {
+  background: white;
+  padding: 20px;
+  border-radius: 10px;
+  max-width: 90%;
+  color: #333;
+}
+
+/* Selection Box */
+.selection-box {
+  position: absolute;
+  border: 2px solid #e74c3c;
+  background: rgba(231, 76, 60, 0.1);
+  pointer-events: none;
+}
