@@ -222,7 +222,7 @@ document.addEventListener("mouseup", () => {
 
 
 // for screenshot understand 
-
+/*
 (function () {
   const html2canvasScript = document.createElement("script");
   html2canvasScript.src = "https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js";
@@ -415,6 +415,231 @@ document.addEventListener("mouseup", () => {
       const pageTitle = document.title.replace(/[^a-zA-Z0-9]/g, '_');
       const filename = `${siteName}-${pageTitle}-screenshot.png`;
 
+      a.href = dataURL;
+      a.download = filename;
+      a.click();
+    }
+  }
+})();
+
+*/
+
+
+(function () {
+  const html2canvasScript = document.createElement("script");
+  html2canvasScript.src = "https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js";
+  html2canvasScript.onload = initScreenshotTool;
+  document.body.appendChild(html2canvasScript);
+
+  function initScreenshotTool() {
+    const toolbox = document.querySelector("#toolbox-container");
+    if (!toolbox) return;
+
+    const screenshotBtn = document.createElement("button");
+    screenshotBtn.textContent = "Screenshot";
+    screenshotBtn.style.cssText = `
+      width: 100%; padding: 10px; margin-bottom: 10px;
+      font-weight: bold; background: #0ea5e9; color: white;
+      border: none; border-radius: 6px; cursor: pointer;
+    `;
+
+    const toolsArea = toolbox.querySelector("div:nth-child(2)");
+    toolsArea.appendChild(screenshotBtn);
+
+    const optionsBox = document.createElement("div");
+    optionsBox.style.display = "none";
+    optionsBox.innerHTML = `
+      <div style="margin-top: 10px">
+        <label>Screenshot Type:</label>
+        <select id="ssType" style="width:100%;padding:6px;border-radius:6px;">
+          <option value="full">Full Webpage</option>
+          <option value="custom">Custom Area</option>
+        </select>
+        <label style="display:block; margin:8px 0 4px;">Include Toolbox:</label>
+        <select id="includeToolbox" style="width:100%;padding:6px;border-radius:6px;">
+          <option value="yes">Yes</option>
+          <option value="no">No</option>
+        </select>
+        <label style="display:block; margin:8px 0 4px;">Download Format:</label>
+        <select id="imageFormat" style="width:100%;padding:6px;border-radius:6px;">
+          <option value="png">PNG</option>
+          <option value="jpeg">JPG</option>
+          <option value="webp">WebP</option>
+        </select>
+        <button id="captureShot" style="width:100%;margin-top:10px;padding:10px;background:#0f766e;color:white;border:none;border-radius:6px;">Capture</button>
+      </div>
+    `;
+    toolsArea.appendChild(optionsBox);
+
+    let captureShotBtn = optionsBox.querySelector("#captureShot");
+
+    screenshotBtn.onclick = () => {
+      const isVisible = optionsBox.style.display === "block";
+      optionsBox.style.display = isVisible ? "none" : "block";
+    };
+
+    captureShotBtn.onclick = autoCapture;
+
+    function autoCapture() {
+      const type = optionsBox.querySelector("#ssType").value;
+      const includeToolbox = optionsBox.querySelector("#includeToolbox").value === "yes";
+      screenshotBtn.disabled = true;
+      captureShotBtn.disabled = true;
+
+      if (type === "full") {
+        if (!includeToolbox) toolbox.style.display = "none";
+        html2canvas(document.body, { scale: 2, useCORS: true }).then(canvas => {
+          if (!includeToolbox) toolbox.style.display = "block";
+          showPreview(canvas);
+        });
+      } else {
+        selectCustomArea(includeToolbox);
+      }
+    }
+
+    function selectCustomArea(includeToolbox) {
+      const selector = document.createElement("div");
+      selector.style.cssText = `
+        position: fixed; border: 2px dashed red; background: rgba(255,0,0,0.1);
+        z-index: 9999;
+      `;
+      document.body.appendChild(selector);
+
+      let startX, startY, isDragging = false;
+
+      function start(e) {
+        isDragging = true;
+        const x = e.touches ? e.touches[0].clientX : e.clientX;
+        const y = e.touches ? e.touches[0].clientY : e.clientY;
+        startX = x; startY = y;
+        selector.style.left = x + "px";
+        selector.style.top = y + "px";
+      }
+
+      function move(e) {
+        if (!isDragging) return;
+        const x = e.touches ? e.touches[0].clientX : e.clientX;
+        const y = e.touches ? e.touches[0].clientY : e.clientY;
+        selector.style.width = Math.abs(x - startX) + "px";
+        selector.style.height = Math.abs(y - startY) + "px";
+        selector.style.left = Math.min(x, startX) + "px";
+        selector.style.top = Math.min(y, startY) + "px";
+      }
+
+      function end() {
+        isDragging = false;
+        const rect = selector.getBoundingClientRect();
+        selector.remove();
+
+        if (!includeToolbox) toolbox.style.display = "none";
+
+        html2canvas(document.body, {
+          x: rect.left,
+          y: rect.top,
+          width: rect.width,
+          height: rect.height,
+          scale: 2,
+          useCORS: true,
+          scrollY: -window.scrollY
+        }).then(canvas => {
+          if (!includeToolbox) toolbox.style.display = "block";
+          showPreview(canvas);
+        });
+
+        document.removeEventListener("mousedown", start);
+        document.removeEventListener("mousemove", move);
+        document.removeEventListener("mouseup", end);
+        document.removeEventListener("touchstart", start);
+        document.removeEventListener("touchmove", move);
+        document.removeEventListener("touchend", end);
+      }
+
+      document.addEventListener("mousedown", start);
+      document.addEventListener("mousemove", move);
+      document.addEventListener("mouseup", end);
+      document.addEventListener("touchstart", start);
+      document.addEventListener("touchmove", move);
+      document.addEventListener("touchend", end);
+    }
+
+    function showPreview(canvas) {
+      const previewBox = document.createElement("div");
+      previewBox.style.cssText = `
+        position: fixed; top: 10%; left: 50%; transform: translateX(-50%);
+        background: white; padding: 10px; border-radius: 8px;
+        box-shadow: 0 0 20px rgba(0,0,0,0.3); z-index: 10000;
+        max-width: 90%; max-height: 80%; overflow: auto;
+      `;
+
+      const closeBtn = document.createElement("button");
+      closeBtn.textContent = "×";
+      closeBtn.style.cssText = `
+        position: absolute; top: 4px; right: 10px;
+        font-size: 22px; background: none; border: none; cursor: pointer;
+      `;
+      closeBtn.onclick = () => {
+        previewBox.remove();
+        screenshotBtn.disabled = false;
+        captureShotBtn.disabled = false;
+      };
+
+      const format = document.getElementById("imageFormat").value;
+      const dataURL = canvas.toDataURL(`image/${format}`, 1.0);
+
+      const img = new Image();
+      img.src = dataURL;
+      img.style.cssText = `max-width: 100%; height: auto; border-radius: 6px; display: block;`;
+
+      const btnWrapper = document.createElement("div");
+      btnWrapper.style.cssText = "margin-top: 10px; text-align: center;";
+
+      const downloadBtn = document.createElement("button");
+      downloadBtn.textContent = `Download (${format})`;
+      downloadBtn.style.cssText = "padding: 8px 16px; background: #22c55e; color: white; border: none; border-radius: 6px; margin-right: 10px;";
+      downloadBtn.onclick = () => {
+        downloadImage(dataURL, format);
+        previewBox.remove();
+        screenshotBtn.disabled = false;
+        captureShotBtn.disabled = false;
+      };
+
+      const copyBtn = document.createElement("button");
+      copyBtn.textContent = "Copy to Clipboard";
+      copyBtn.style.cssText = "padding: 8px 16px; background: #3b82f6; color: white; border: none; border-radius: 6px; margin-right: 10px;";
+      copyBtn.onclick = async () => {
+        const blob = await (await fetch(dataURL)).blob();
+        try {
+          await navigator.clipboard.write([new ClipboardItem({ [blob.type]: blob })]);
+          copyBtn.textContent = "Copied!";
+          setTimeout(() => (copyBtn.textContent = "Copy to Clipboard"), 1500);
+        } catch (err) {
+          alert("Clipboard copy failed: " + err);
+        }
+      };
+
+      const cancelBtn = document.createElement("button");
+      cancelBtn.textContent = "Cancel";
+      cancelBtn.style.cssText = "padding: 8px 16px; background: #ef4444; color: white; border: none; border-radius: 6px;";
+      cancelBtn.onclick = () => {
+        previewBox.remove();
+        screenshotBtn.disabled = false;
+        captureShotBtn.disabled = false;
+      };
+
+      btnWrapper.appendChild(downloadBtn);
+      btnWrapper.appendChild(copyBtn);
+      btnWrapper.appendChild(cancelBtn);
+      previewBox.appendChild(closeBtn);
+      previewBox.appendChild(img);
+      previewBox.appendChild(btnWrapper);
+      document.body.appendChild(previewBox);
+    }
+
+    function downloadImage(dataURL, format) {
+      const a = document.createElement("a");
+      const siteName = window.location.hostname.replace("www.", "").split(".")[0];
+      const pageTitle = document.title.replace(/[^a-zA-Z0-9]/g, '_');
+      const filename = `${siteName}-${pageTitle}-screenshot.${format}`;
       a.href = dataURL;
       a.download = filename;
       a.click();
