@@ -30,7 +30,7 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    cursor: move;
+    cursor: grap;
     border-radius: 10px 10px 0 0;
   `;
 
@@ -46,6 +46,32 @@
   `;
   header.appendChild(toggleBtn);
   toolbox.appendChild(header);
+const buttonContainer = document.createElement("div");
+
+
+
+const closeBtn = document.createElement("button");
+closeBtn.textContent = "×";
+closeBtn.style.cssText = `
+  background: transparent;
+  border: none;
+  color: white;
+  font-size: 20px;
+  margin-right: 8px;
+  cursor: pointer;
+`;
+
+
+buttonContainer.appendChild(closeBtn);
+header.appendChild(buttonContainer);
+
+// Minimize toggle
+
+// Close functionality
+closeBtn.addEventListener("click", () => {
+  toolbox.style.display = "none";
+});
+
 
   const toolsArea = document.createElement("div");
   toolsArea.style.cssText = `padding: 12px; transition: 0.3s ease;`;
@@ -142,27 +168,40 @@
     formatSection.style.display = "none";
   });
 
-  // Dragging support
-  let offsetX = 0, offsetY = 0, isDragging = false;
+let offsetX = 0, offsetY = 0, isDragging = false;
 
-  toolbox.addEventListener("mousedown", (e) => {
+// Start dragging — for mouse and touch
+function startDrag(e) {
   isDragging = true;
-  offsetX = e.clientX - toolbox.offsetLeft;
-  offsetY = e.clientY - toolbox.offsetTop;
-});
+  const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+  const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+  offsetX = clientX - toolbox.offsetLeft;
+  offsetY = clientY - toolbox.offsetTop;
+  document.body.style.userSelect = "none";
+}
 
-  document.addEventListener("mousemove", (e) => {
+// During drag
+function onDrag(e) {
   if (!isDragging) return;
-  let x = e.clientX - offsetX;
-  let y = e.clientY - offsetY;
+  const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+  const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+  toolbox.style.left = `${clientX - offsetX}px`;
+  toolbox.style.top = `${clientY - offsetY}px`;
+}
 
-  // Remove limits — allow full screen drag (even off-screen if you want)
-  toolbox.style.left = `${x}px`;
-  toolbox.style.top = `${y}px`;
-});
+// End drag
+function endDrag() {
+  isDragging = false;
+  document.body.style.userSelect = "";
+}
 
-  document.addEventListener("mouseup", () => {
-    isDragging = false;
-    document.body.style.userSelect = "";
-  });
+// Events
+header.addEventListener("mousedown", startDrag);
+header.addEventListener("touchstart", startDrag);
+
+document.addEventListener("mousemove", onDrag);
+document.addEventListener("touchmove", onDrag);
+
+document.addEventListener("mouseup", endDrag);
+document.addEventListener("touchend", endDrag);
 })();
