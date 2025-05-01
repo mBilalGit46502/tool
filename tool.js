@@ -475,29 +475,39 @@ document.addEventListener("mouseup", () => {
     const captureShotBtn = optionsBox.querySelector("#captureShot");
 
     screenshotBtn.onclick = () => {
-      const isVisible = optionsBox.style.display === "block";
-      optionsBox.style.display = isVisible ? "none" : "block";
+      optionsBox.style.display = optionsBox.style.display === "block" ? "none" : "block";
     };
 
-    captureShotBtn.onclick = autoCapture;
-
-    function autoCapture() {
+    captureShotBtn.onclick = () => {
       const type = optionsBox.querySelector("#ssType").value;
       const includeToolbox = optionsBox.querySelector("#includeToolbox").value === "yes";
       const format = optionsBox.querySelector("#imageFormat").value;
+
       screenshotBtn.disabled = true;
       captureShotBtn.disabled = true;
 
       if (type === "full") {
         if (!includeToolbox) toolbox.style.display = "none";
-        html2canvas(document.body, { scale: 10, useCORS: true }).then(canvas => {
+
+        // Scroll to top to ensure full rendering
+        window.scrollTo(0, 0);
+
+        html2canvas(document.body, {
+          scale: 4,
+          useCORS: true,
+          logging: true,
+          allowTaint: true,
+          imageTimeout: 20000,
+          windowWidth: document.documentElement.scrollWidth,
+          windowHeight: document.documentElement.scrollHeight
+        }).then(canvas => {
           if (!includeToolbox) toolbox.style.display = "block";
           showPreview(canvas, format);
         });
       } else {
         selectCustomArea(includeToolbox, format);
       }
-    }
+    };
 
     function selectCustomArea(includeToolbox, format) {
       const selector = document.createElement("div");
@@ -540,7 +550,7 @@ document.addEventListener("mouseup", () => {
           y: rect.top,
           width: rect.width,
           height: rect.height,
-          scale: 10,
+          scale: 4,
           useCORS: true,
           scrollY: -window.scrollY
         }).then(canvas => {
@@ -599,20 +609,16 @@ document.addEventListener("mouseup", () => {
       downloadBtn.onclick = () => {
         const a = document.createElement("a");
         a.href = dataURL;
-        const websiteName = location.hostname.replace(/\W+/g, "-");
-        const pageName = document.title.trim().replace(/\W+/g, "-");
-        a.download = `${websiteName}-${pageName}.${format}`;
+        const name = `${location.hostname.replace(/\W+/g, "-")}-${document.title.trim().replace(/\W+/g, "-")}.${format}`;
+        a.download = name;
         a.click();
       };
 
       const clipboardBtn = document.createElement("button");
-      clipboardBtn.textContent = `Copy to Clipboard (${format.toUpperCase()} + URL)`;
-      clipboardBtn.style.cssText = "padding: 8px 16px; background: #0ea5e9; color: white; border: none; border-radius: 6px; margin-left: 10px;";
-      clipboardBtn.onclick = () => {
-        copyImageToClipboard(canvas, format);
-      };
+      clipboardBtn.textContent = `Copy to Clipboard`;
+      clipboardBtn.style.cssText = "padding: 8px 16px; background: #0ea5e9; color: white; border: none; border-radius: 6px;";
+      clipboardBtn.onclick = () => copyImageToClipboard(canvas, format);
 
-      // Check Clipboard support after button creation
       if (!window.ClipboardItem || !navigator.clipboard.write) {
         clipboardBtn.disabled = true;
         clipboardBtn.textContent = "Clipboard Not Supported";
@@ -637,14 +643,15 @@ document.addEventListener("mouseup", () => {
       document.body.appendChild(previewBox);
     }
 
-    async function copyImageToClipboard(canvas, format = "png") {
+    async function copyImageToClipboard(canvas, format) {
       try {
-        const dataURL = canvas.toDataURL("image/" + format, 1.0);
-        await navigator.clipboard.writeText(dataURL);
-        alert("Image data URL copied to clipboard!");
-      } catch (error) {
-        console.error("Clipboard copy failed:", error);
-        alert("Failed to copy image to clipboard. Try a supported browser over HTTPS.");
+        const blob = await new Promise(resolve => canvas.toBlob(resolve, `image/${format}`));
+        const clipboardItem = new ClipboardItem({ [`image/${format}`]: blob });
+        await navigator.clipboard.write([clipboardItem]);
+        alert("Image copied to clipboard!");
+      } catch (err) {
+        console.error("Copy failed:", err);
+        alert("Clipboard copy failed. Try HTTPS and a supported browser.");
       }
     }
   }
