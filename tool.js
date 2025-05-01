@@ -171,6 +171,32 @@ closeBtn.addEventListener("click", () => {
   });
 
 // For mouse events (laptop/desktop)
+// Add CSS transition for smooth movement
+toolbox.style.transition = 'left 0.1s ease, top 0.1s ease';
+
+// For touch events (mobile)
+toolbox.addEventListener("touchstart", (e) => {
+  isDragging = true;
+  const touch = e.touches[0];
+  offsetX = touch.clientX - toolbox.offsetLeft;
+  offsetY = touch.clientY - toolbox.offsetTop;
+  document.body.style.userSelect = "none"; // Prevent text selection during dragging
+});
+
+document.addEventListener("touchmove", (e) => {
+  if (isDragging) {
+    const touch = e.touches[0];
+    toolbox.style.left = `${touch.clientX - offsetX}px`;
+    toolbox.style.top = `${touch.clientY - offsetY}px`;
+  }
+});
+
+document.addEventListener("touchend", () => {
+  isDragging = false;
+  document.body.style.userSelect = "";
+});
+
+// For mouse events (laptop/desktop)
 toolbox.addEventListener("mousedown", (e) => {
   isDragging = true;
   offsetX = e.clientX - toolbox.offsetLeft;
@@ -189,42 +215,5 @@ document.addEventListener("mouseup", () => {
   isDragging = false;
   document.body.style.userSelect = "";
 });
-
-let offsetX = 0, offsetY = 0, isDragging = false;
-
-// Start dragging — for mouse and touch
-function startDrag(e) {
-  isDragging = true;
-  const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-  const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-  offsetX = clientX - toolbox.offsetLeft;
-  offsetY = clientY - toolbox.offsetTop;
-  document.body.style.userSelect = "none";
-}
-
-// During drag
-function onDrag(e) {
-  if (!isDragging) return;
-  const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-  const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-  toolbox.style.left = `${clientX - offsetX}px`;
-  toolbox.style.top = `${clientY - offsetY}px`;
-}
-
-// End drag
-function endDrag() {
-  isDragging = false;
-  document.body.style.userSelect = "";
-}
-
-// Events
-header.addEventListener("mousedown", startDrag);
-header.addEventListener("touchstart", startDrag);
-
-document.addEventListener("mousemove", onDrag);
-document.addEventListener("touchmove", onDrag);
-
-document.addEventListener("mouseup", endDrag);
-document.addEventListener("touchend", endDrag);
 })();
 
