@@ -427,89 +427,100 @@ document.addEventListener("mouseup", () => {
 
 
 (function () {
-  const html2canvasScript = document.createElement("script");
-  html2canvasScript.src = "https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js";
-  html2canvasScript.onload = initScreenshotTool;
-  document.body.appendChild(html2canvasScript);
+  const ScreenshotTool = (function () {
+    let toolbox, screenshotBtn, captureShotBtn, previewBox;
 
-  function initScreenshotTool() {
-    const toolbox = document.querySelector("#toolbox-container");
-    if (!toolbox) return;
+    function loadHtml2Canvas(callback) {
+      const script = document.createElement("script");
+      script.src = "https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js";
+      script.onload = callback;
+      document.body.appendChild(script);
+    }
 
-    const screenshotBtn = document.createElement("button");
-    screenshotBtn.textContent = "Screenshot";
-    screenshotBtn.style.cssText = `
-      width: 100%; padding: 10px; margin-bottom: 10px;
-      font-weight: bold; background: #0ea5e9; color: white;
-      border: none; border-radius: 6px; cursor: pointer;
-    `;
+    function init() {
+      toolbox = document.querySelector("#toolbox-container");
+      if (!toolbox) return;
 
-    const toolsArea = toolbox.querySelector("div:nth-child(2)");
-    toolsArea.appendChild(screenshotBtn);
+      screenshotBtn = document.createElement("button");
+      screenshotBtn.textContent = "Screenshot";
+      screenshotBtn.style.cssText = `
+        width: 100%; padding: 10px; margin-bottom: 10px;
+        font-weight: bold; background: #0ea5e9; color: white;
+        border: none; border-radius: 6px; cursor: pointer;
+      `;
 
-    const optionsBox = document.createElement("div");
-    optionsBox.style.display = "none";
-    optionsBox.innerHTML = `
-      <div style="margin-top: 10px">
-        <label>Screenshot Type:</label>
-        <select id="ssType" style="width:100%;padding:6px;border-radius:6px;">
-          <option value="full">Full Webpage</option>
-          <option value="custom">Custom Area</option>
-        </select>
-        <label style="display:block; margin:8px 0 4px;">Include Toolbox:</label>
-        <select id="includeToolbox" style="width:100%;padding:6px;border-radius:6px;">
-          <option value="yes">Yes</option>
-          <option value="no">No</option>
-        </select>
-        <label style="display:block; margin:8px 0 4px;">Image Format:</label>
-        <select id="imageFormat" style="width:100%;padding:6px;border-radius:6px;">
-          <option value="png">PNG</option>
-          <option value="jpeg">JPG</option>
-          <option value="webp">WEBP</option>
-        </select>
-        <button id="captureShot" style="width:100%;margin-top:10px;padding:10px;background:#0f766e;color:white;border:none;border-radius:6px;">Capture</button>
-      </div>
-    `;
-    toolsArea.appendChild(optionsBox);
+      const toolsArea = toolbox.querySelector("div:nth-child(2)");
+      toolsArea.appendChild(screenshotBtn);
 
-    const captureShotBtn = optionsBox.querySelector("#captureShot");
+      const optionsBox = document.createElement("div");
+      optionsBox.style.display = "none";
+      optionsBox.innerHTML = `
+        <div style="margin-top: 10px">
+          <label>Screenshot Type:</label>
+          <select id="ssType" style="width:100%;padding:6px;border-radius:6px;">
+            <option value="full">Full Webpage</option>
+            <option value="custom">Custom Area</option>
+          </select>
+          <label style="display:block; margin:8px 0 4px;">Include Toolbox:</label>
+          <select id="includeToolbox" style="width:100%;padding:6px;border-radius:6px;">
+            <option value="yes">Yes</option>
+            <option value="no">No</option>
+          </select>
+          <label style="display:block; margin:8px 0 4px;">Image Format:</label>
+          <select id="imageFormat" style="width:100%;padding:6px;border-radius:6px;">
+            <option value="png">PNG</option>
+            <option value="jpeg">JPG</option>
+            <option value="webp">WEBP</option>
+          </select>
+          <button id="captureShot" style="width:100%;margin-top:10px;padding:10px;background:#0f766e;color:white;border:none;border-radius:6px;">Capture</button>
+        </div>
+      `;
+      toolsArea.appendChild(optionsBox);
 
-    screenshotBtn.onclick = () => {
-      optionsBox.style.display = optionsBox.style.display === "block" ? "none" : "block";
-    };
+      captureShotBtn = optionsBox.querySelector("#captureShot");
 
-    captureShotBtn.onclick = () => {
-      const type = optionsBox.querySelector("#ssType").value;
-      const includeToolbox = optionsBox.querySelector("#includeToolbox").value === "yes";
-      const format = optionsBox.querySelector("#imageFormat").value;
+      screenshotBtn.onclick = () => {
+        optionsBox.style.display = optionsBox.style.display === "block" ? "none" : "block";
+      };
 
-      screenshotBtn.disabled = true;
-      captureShotBtn.disabled = true;
+      captureShotBtn.onclick = () => {
+        const type = optionsBox.querySelector("#ssType").value;
+        const includeToolbox = optionsBox.querySelector("#includeToolbox").value === "yes";
+        const format = optionsBox.querySelector("#imageFormat").value;
 
-      if (type === "full") {
-        if (!includeToolbox) toolbox.style.display = "none";
+        screenshotBtn.disabled = true;
+        captureShotBtn.disabled = true;
 
-        // Scroll to top to ensure full rendering
-        window.scrollTo(0, 0);
+        if (type === "full") {
+          if (!includeToolbox) toolbox.style.display = "none";
+          window.scrollTo(0, 0);
+          html2canvas(document.body, {
+            scale: 2,
+            useCORS: true,
+            logging: false,
+            allowTaint: true,
+            imageTimeout: 20000,
+            windowWidth: document.documentElement.scrollWidth,
+            windowHeight: document.documentElement.scrollHeight
+          }).then(canvas => {
+            if (!includeToolbox) toolbox.style.display = "block";
+            showPreview(canvas, format);
+          });
+        } else {
+          startCustomSelection(includeToolbox, format);
+        }
+      };
+    }
 
-        html2canvas(document.body, {
-          scale: 10,
-          useCORS: true,
-          logging: true,
-          allowTaint: true,
-          imageTimeout: 20000,
-          windowWidth: document.documentElement.scrollWidth,
-          windowHeight: document.documentElement.scrollHeight
-        }).then(canvas => {
-          if (!includeToolbox) toolbox.style.display = "block";
-          showPreview(canvas, format);
-        });
-      } else {
-        selectCustomArea(includeToolbox, format);
-      }
-    };
+    function startCustomSelection(includeToolbox, format) {
+      const overlay = document.createElement("div");
+      overlay.style.cssText = `
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(0,0,0,0.1); z-index: 9998;
+        touch-action: none;
+      `;
+      document.body.appendChild(overlay);
 
-    function selectCustomArea(includeToolbox, format) {
       const selector = document.createElement("div");
       selector.style.cssText = `
         position: fixed; border: 2px dashed red; background: rgba(255,0,0,0.1);
@@ -526,6 +537,8 @@ document.addEventListener("mouseup", () => {
         startX = x; startY = y;
         selector.style.left = x + "px";
         selector.style.top = y + "px";
+        selector.style.width = "0px";
+        selector.style.height = "0px";
       }
 
       function move(e) {
@@ -541,7 +554,7 @@ document.addEventListener("mouseup", () => {
       function end() {
         isDragging = false;
         const rect = selector.getBoundingClientRect();
-        selector.remove();
+        cleanup();
 
         if (!includeToolbox) toolbox.style.display = "none";
 
@@ -550,20 +563,26 @@ document.addEventListener("mouseup", () => {
           y: rect.top,
           width: rect.width,
           height: rect.height,
-          scale: 10,
+          scale: 2,
           useCORS: true,
           scrollY: -window.scrollY
         }).then(canvas => {
           if (!includeToolbox) toolbox.style.display = "block";
           showPreview(canvas, format);
         });
+      }
 
+      function cleanup() {
+        selector.remove();
+        overlay.remove();
         document.removeEventListener("mousedown", start);
         document.removeEventListener("mousemove", move);
         document.removeEventListener("mouseup", end);
         document.removeEventListener("touchstart", start);
         document.removeEventListener("touchmove", move);
         document.removeEventListener("touchend", end);
+        screenshotBtn.disabled = false;
+        captureShotBtn.disabled = false;
       }
 
       document.addEventListener("mousedown", start);
@@ -576,7 +595,8 @@ document.addEventListener("mouseup", () => {
 
     function showPreview(canvas, format) {
       const dataURL = canvas.toDataURL("image/" + format, 1.0);
-      const previewBox = document.createElement("div");
+
+      previewBox = document.createElement("div");
       previewBox.style.cssText = `
         position: fixed; top: 10%; left: 50%; transform: translateX(-50%);
         background: white; padding: 10px; border-radius: 8px;
@@ -590,11 +610,7 @@ document.addEventListener("mouseup", () => {
         position: absolute; top: 4px; right: 10px;
         font-size: 22px; background: none; border: none; cursor: pointer;
       `;
-      closeBtn.onclick = () => {
-        previewBox.remove();
-        screenshotBtn.disabled = false;
-        captureShotBtn.disabled = false;
-      };
+      closeBtn.onclick = removePreview;
 
       const img = new Image();
       img.src = dataURL;
@@ -618,7 +634,6 @@ document.addEventListener("mouseup", () => {
       clipboardBtn.textContent = `Copy to Clipboard`;
       clipboardBtn.style.cssText = "padding: 8px 16px; background: #0ea5e9; color: white; border: none; border-radius: 6px;";
       clipboardBtn.onclick = () => copyImageToClipboard(canvas, format);
-
       if (!window.ClipboardItem || !navigator.clipboard.write) {
         clipboardBtn.disabled = true;
         clipboardBtn.textContent = "Clipboard Not Supported";
@@ -627,12 +642,7 @@ document.addEventListener("mouseup", () => {
       const cancelBtn = document.createElement("button");
       cancelBtn.textContent = "Cancel";
       cancelBtn.style.cssText = "padding: 8px 16px; background: #ef4444; color: white; border: none; border-radius: 6px;";
-
-      cancelBtn.onclick = () => {
-        previewBox.remove();
-        screenshotBtn.disabled = false;
-        captureShotBtn.disabled = false;
-      };
+      cancelBtn.onclick = removePreview;
 
       btnWrapper.appendChild(downloadBtn);
       btnWrapper.appendChild(clipboardBtn);
@@ -643,6 +653,12 @@ document.addEventListener("mouseup", () => {
       document.body.appendChild(previewBox);
     }
 
+    function removePreview() {
+      previewBox?.remove();
+      screenshotBtn.disabled = false;
+      captureShotBtn.disabled = false;
+    }
+
     async function copyImageToClipboard(canvas, format) {
       try {
         const blob = await new Promise(resolve => canvas.toBlob(resolve, `image/${format}`));
@@ -650,9 +666,13 @@ document.addEventListener("mouseup", () => {
         await navigator.clipboard.write([clipboardItem]);
         alert("Image copied to clipboard!");
       } catch (err) {
-        console.error("Copy failed:", err);
-        alert("Clipboard copy failed. Try HTTPS and a supported browser.");
+        console.error("Clipboard copy failed:", err);
+        alert("Failed to copy image.");
       }
     }
-  }
+
+    return { init, loadHtml2Canvas };
+  })();
+
+  ScreenshotTool.loadHtml2Canvas(ScreenshotTool.init);
 })();
