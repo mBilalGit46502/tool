@@ -126,12 +126,39 @@
     toggleBtn.textContent = isHidden ? "–" : "+";
   });
 
+  function extractProductData() {
+    const products = [];
+    const allElements = document.querySelectorAll("body *");
+
+    allElements.forEach((el) => {
+      const text = el.innerText?.toLowerCase() || "";
+      const hasPrice = /\$\d+|\d+(\.\d{2})? ?(usd|rs|inr|€|£)/i.test(text);
+      const hasImage = el.querySelector("img");
+      const hasTitle = el.querySelector("h1,h2,h3,h4");
+      const hasLink = el.querySelector("a[href]");
+      const price = text.match(/\$\d+|\d+(\.\d{2})? ?(usd|rs|inr|€|£)/i);
+
+      if (hasPrice && hasImage && hasTitle) {
+        products.push({
+          title: hasTitle?.innerText.trim() || "",
+          description: el.innerText.trim().slice(0, 300),
+          image: hasImage?.src || "",
+          url: hasLink?.href || window.location.href,
+          price: price ? price[0] : "N/A",
+        });
+      }
+    });
+
+    return products;
+  }
+
   formatSection.querySelector("#confirmBtn").addEventListener("click", () => {
     const format = formatSection.querySelector("#downloadFormat").value;
     toolbox.style.display = "none";
 
     setTimeout(() => {
       const filename = document.title.replace(/\s+/g, "_") + "_" + new Date().toISOString().slice(0, 16).replace(/[:T]/g, "-");
+
       const contentClone = document.body.cloneNode(true);
       const toolboxClone = contentClone.querySelector("#toolbox-container");
       if (toolboxClone) toolboxClone.remove();
@@ -152,13 +179,14 @@
           blob = new Blob(["<!DOCTYPE html>" + contentClone.innerHTML], { type: "text/html" });
           extension = "html";
         } else if (format === "json") {
-          const pageData = {
+          const data = extractProductData();
+          const jsonData = data.length > 0 ? data : [{
             title: document.title,
             url: window.location.href,
             timestamp: new Date().toISOString(),
             content: getMainContentText(),
-          };
-          blob = new Blob([JSON.stringify(pageData, null, 2)], { type: "application/json" });
+          }];
+          blob = new Blob([JSON.stringify(jsonData, null, 2)], { type: "application/json" });
           extension = "json";
         } else {
           blob = new Blob([getMainContentText()], { type: "text/plain" });
