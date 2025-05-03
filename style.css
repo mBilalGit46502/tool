@@ -100,10 +100,11 @@ body.dark-mode {
   margin-top: 0.3rem;
   padding: 0.4rem;
 }
+/*
 @media (prefers-color-scheme: dark) {
   body {
     background-color: #121212;
     color: #ffffff;
   }
   /* Additional dark mode styles */
-}
+
