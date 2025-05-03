@@ -5,7 +5,7 @@
   toolbox.id = "toolbox-container";
   document.body.appendChild(toolbox);
 
-  // --- Add print media rule to hide toolbox during print ---
+  // Hide toolbox on print
   const style = document.createElement("style");
   style.textContent = `
     @media print {
@@ -16,9 +16,7 @@
   `;
   document.head.appendChild(style);
 
-  // (Continue with your existing code below...)
-
-  // Styling
+  // Styling (unchanged)
   toolbox.style.cssText = `
     position: fixed;
     top: 400px;
@@ -35,11 +33,9 @@
     display:flex;
     flex-direction:column;
     justify-content:space-evenly;
+    transition: left 0.1s ease, top 0.1s ease;
   `;
 
- 
-
-  // Header
   const header = document.createElement("div");
   header.innerHTML = `<strong style="padding-left:10px;">Smart Toolbox</strong>`;
   header.style.cssText = `
@@ -50,7 +46,7 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    cursor: grap;
+    cursor: grab;
     border-radius: 10px 10px 0 0;
   `;
 
@@ -66,32 +62,24 @@
   `;
   header.appendChild(toggleBtn);
   toolbox.appendChild(header);
-const buttonContainer = document.createElement("div");
 
+  const buttonContainer = document.createElement("div");
+  const closeBtn = document.createElement("button");
+  closeBtn.textContent = "×";
+  closeBtn.style.cssText = `
+    background: transparent;
+    border: none;
+    color: white;
+    font-size: 20px;
+    margin-right: 8px;
+    cursor: pointer;
+  `;
+  buttonContainer.appendChild(closeBtn);
+  header.appendChild(buttonContainer);
 
-
-const closeBtn = document.createElement("button");
-closeBtn.textContent = "×";
-closeBtn.style.cssText = `
-  background: transparent;
-  border: none;
-  color: white;
-  font-size: 20px;
-  margin-right: 8px;
-  cursor: pointer;
-`;
-
-
-buttonContainer.appendChild(closeBtn);
-header.appendChild(buttonContainer);
-
-// Minimize toggle
-
-// Close functionality
-closeBtn.addEventListener("click", () => {
-  toolbox.style.display = "none";
-});
-
+  closeBtn.addEventListener("click", () => {
+    toolbox.style.display = "none";
+  });
 
   const toolsArea = document.createElement("div");
   toolsArea.style.cssText = `padding: 12px; transition: 0.3s ease;`;
@@ -188,55 +176,49 @@ closeBtn.addEventListener("click", () => {
     formatSection.style.display = "none";
   });
 
-// For mouse events (laptop/desktop)
-// Add CSS transition for smooth movement
-toolbox.style.transition = 'left 0.1s ease, top 0.1s ease';
+  // Drag handling
+  let isDragging = false, offsetX = 0, offsetY = 0;
 
-// For touch events (mobile)
-toolbox.addEventListener("touchstart", (e) => {
-  isDragging = true;
-  const touch = e.touches[0];
-  offsetX = touch.clientX - toolbox.offsetLeft;
-  offsetY = touch.clientY - toolbox.offsetTop;
-  document.body.style.userSelect = "none"; // Prevent text selection during dragging
-});
+  const startDrag = (x, y) => {
+    isDragging = true;
+    offsetX = x - toolbox.offsetLeft;
+    offsetY = y - toolbox.offsetTop;
+    document.body.style.overflow = "hidden"; // Disable scroll
+    document.body.style.userSelect = "none";
+  };
 
-document.addEventListener("touchmove", (e) => {
-  if (isDragging) {
+  const stopDrag = () => {
+    isDragging = false;
+    document.body.style.overflow = ""; // Re-enable scroll
+    document.body.style.userSelect = "";
+  };
+
+  const onDrag = (x, y) => {
+    if (isDragging) {
+      toolbox.style.left = `${x - offsetX}px`;
+      toolbox.style.top = `${y - offsetY}px`;
+    }
+  };
+
+  // Mouse
+  toolbox.addEventListener("mousedown", (e) => startDrag(e.clientX, e.clientY));
+  document.addEventListener("mousemove", (e) => onDrag(e.clientX, e.clientY));
+  document.addEventListener("mouseup", stopDrag);
+
+  // Touch
+  toolbox.addEventListener("touchstart", (e) => {
     const touch = e.touches[0];
-    toolbox.style.left = `${touch.clientX - offsetX}px`;
-    toolbox.style.top = `${touch.clientY - offsetY}px`;
-  }
-});
-
-document.addEventListener("touchend", () => {
-  isDragging = false;
-  document.body.style.userSelect = "";
-});
-
-// For mouse events (laptop/desktop)
-toolbox.addEventListener("mousedown", (e) => {
-  isDragging = true;
-  offsetX = e.clientX - toolbox.offsetLeft;
-  offsetY = e.clientY - toolbox.offsetTop;
-  document.body.style.userSelect = "none"; // Prevent text selection during dragging
-});
-
-document.addEventListener("mousemove", (e) => {
-  if (isDragging) {
-    toolbox.style.left = `${e.clientX - offsetX}px`;
-    toolbox.style.top = `${e.clientY - offsetY}px`;
-  }
-});
-
-document.addEventListener("mouseup", () => {
-  isDragging = false;
-  document.body.style.userSelect = "";
-});
+    startDrag(touch.clientX, touch.clientY);
+  });
+  document.addEventListener("touchmove", (e) => {
+    const touch = e.touches[0];
+    onDrag(touch.clientX, touch.clientY);
+  });
+  document.addEventListener("touchend", stopDrag);
 })();
 
 
-
+// For Screenshot 
 (function () {
   const ScreenshotTool = (function () {
     let toolbox, screenshotBtn, captureShotBtn, previewBox;
