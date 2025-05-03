@@ -5,7 +5,6 @@
   toolbox.id = "toolbox-container";
   document.body.appendChild(toolbox);
 
-  // Hide toolbox on print
   const style = document.createElement("style");
   style.textContent = `
     @media print {
@@ -16,7 +15,6 @@
   `;
   document.head.appendChild(style);
 
-  // Styling (unchanged)
   toolbox.style.cssText = `
     position: fixed;
     top: 400px;
@@ -138,6 +136,14 @@
       const toolboxClone = contentClone.querySelector("#toolbox-container");
       if (toolboxClone) toolboxClone.remove();
 
+      const getMainContentText = () => {
+        const headings = document.querySelector("h1, h2, h3");
+        if (headings) return headings.innerText.trim();
+        const meta = document.querySelector("meta[name='description']");
+        if (meta) return meta.content.slice(0, 300);
+        return document.body.innerText.slice(0, 300);
+      };
+
       if (format === "pdf") {
         window.print();
       } else {
@@ -150,12 +156,12 @@
             title: document.title,
             url: window.location.href,
             timestamp: new Date().toISOString(),
-            sample: contentClone.innerText.slice(0, 300),
+            content: getMainContentText(),
           };
           blob = new Blob([JSON.stringify(pageData, null, 2)], { type: "application/json" });
           extension = "json";
         } else {
-          blob = new Blob([contentClone.innerText], { type: "text/plain" });
+          blob = new Blob([getMainContentText()], { type: "text/plain" });
           extension = "txt";
         }
 
@@ -176,20 +182,19 @@
     formatSection.style.display = "none";
   });
 
-  // Drag handling
   let isDragging = false, offsetX = 0, offsetY = 0;
 
   const startDrag = (x, y) => {
     isDragging = true;
     offsetX = x - toolbox.offsetLeft;
     offsetY = y - toolbox.offsetTop;
-    document.body.style.overflow = "hidden"; // Disable scroll
+    document.body.style.overflow = "hidden";
     document.body.style.userSelect = "none";
   };
 
   const stopDrag = () => {
     isDragging = false;
-    document.body.style.overflow = ""; // Re-enable scroll
+    document.body.style.overflow = "";
     document.body.style.userSelect = "";
   };
 
@@ -200,12 +205,10 @@
     }
   };
 
-  // Mouse
   toolbox.addEventListener("mousedown", (e) => startDrag(e.clientX, e.clientY));
   document.addEventListener("mousemove", (e) => onDrag(e.clientX, e.clientY));
   document.addEventListener("mouseup", stopDrag);
 
-  // Touch
   toolbox.addEventListener("touchstart", (e) => {
     const touch = e.touches[0];
     startDrag(touch.clientX, touch.clientY);
